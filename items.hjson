@@ -1,0 +1,17 @@
+
+[
+  {
+    name: Big Item
+    desc: Does thing
+    battle_stats: {
+      ac: 2
+    }
+  },
+  {
+    name: Big Item
+    desc: Does thing
+    battle_stats: {
+      ac: 2
+    }
+  },
+]
