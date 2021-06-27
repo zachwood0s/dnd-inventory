@@ -2,6 +2,8 @@ import npyscreen
 import textwrap
 import resourceManager
 
+MY_COLOR = 'VERYGOOD'
+OTHER_COLOR = 'WARNING'
 
 class MessageBox(npyscreen.BoxTitle):
 
@@ -10,8 +12,8 @@ class MessageBox(npyscreen.BoxTitle):
         self.buff_messages = []
         self.entry_widget.highlighting_arr_color_data = []
 
-    def update_messages(self, current_user):
-        messages = self.get_messages_info(current_user)
+    def update_messages(self):
+        messages = self.get_messages_info()
 
         color_data = []
         data = []
@@ -35,118 +37,80 @@ class MessageBox(npyscreen.BoxTitle):
 
         self.display()
 
-    def get_messages_info(self, current_user):
-        messages = resourceManager.get_messages(current_user)
+    def get_messages_info(self):
+        messages = resourceManager.get_chat_messages()
 
         # get user info
         users = resourceManager.get_players()
-        max_name_len = max(len(u.name) for u in users)
-
-        # # check buffer
-        # buff = self.buff_messages[current_user]
-        # if buff is not None and messages is not None and \
-        #         len(buff) != 0 and len(messages) != 0 and \
-        #         len(messages) != len(buff) and \
-        #         buff[0].id == messages[0].id and max_read_mess == self.buf_max_read_mess:
-        #     return buff
+        max_name_len = max(len(textwrap.wrap(u.name, self.width // 5)[0]) for u in users)
 
         out = []
-        for i in range(len(messages)):
-            date = messages[i].date
-            mess_id = messages[i].id
-
-            # get name if message is forwarding
-            prepare_forward_message = self.prepare_forward_messages(messages[i])
+        for msg in messages:
 
             # if chat or interlocutor
-            if dialog_type == 1 or dialog_type == 2:
-                user_name = users[messages[i].sender.id].name
-                user_name = user_name if prepare_forward_message is False else prepare_forward_message
-                if (len(user_name) != 0):
-                    user_name = textwrap.wrap(user_name, self.width // 5)[0]
-                else:
-                    user_name = "Deleted Account"
-                offset = " " * (max_name_len - (len(user_name)))
-                name = read + user_name + ":" + offset
-                color = (len(read) + len(user_name)) * [users[messages[i].sender.id].color]
-
-            # if channel
-            elif dialog_type == 3:
-                user_name = client.dialogs[current_user].name
-                user_name = user_name if prepare_forward_message is False else prepare_forward_message
+            user_name = msg.sender
+            if len(user_name) != 0:
                 user_name = textwrap.wrap(user_name, self.width // 5)[0]
 
-                name = user_name + ": "
-                color = len(user_name) * [self.parent.theme_manager.findPair(self, 'WARNING')]
-
-            else:
-                name = ""
-                color = [0]
-
-            media = messages[i].media if hasattr(messages[i], 'media') else None
-            mess = messages[i].message if hasattr(messages[i], 'message') \
-                                          and isinstance(messages[i].message, str) else None
-
-            image_name = ""
-            if self.aalib and media is not None and hasattr(media, 'photo'):
-                image_name = name
-                name = len(name) * " "
+            offset = " " * (max_name_len - (len(user_name)))
+            name = user_name + ":" + offset
+            color_name = MY_COLOR if msg.sender == resourceManager.get_my_player_name() else OTHER_COLOR
+            color_val = self.parent.theme_manager.findPair(self, color_name)
+            color = (len(user_name)) * [color_val]
+            mess = "\n".join(msg.data)
 
             # add message to out []
-            self.prepare_message(out, mess, name, read, mess_id, color, date)
-
-            # add media to out []
-            self.prepare_media(out, media, name, image_name, read, mess_id, color, date)
+            self.prepare_message(out, mess, name, color)
 
         # update buffer
-        self.buff_messages[current_user] = out
+        self.buff_messages = out
 
         # return Message obj
         return out
 
     # structure for out message
     class Messages:
-        def __init__(self, name, date, color, message, id, read):
+        def __init__(self, name, color, message):
             self.name = name
             self.color = color
             self.message = message
 
     # add message to Message structure
-    def prepare_message(self, out, mess, name, read, mess_id, color, date):
+    def prepare_message(self, out, mess, name, color):
 
         # add message to return
         if mess is not None and mess != "":
             if mess.find("\n") == -1:
-                if len(mess) + len(name) + len(read) > self.width - 10:
+                if len(mess) + len(name) > self.width - 10:
                     max_char = self.width - len(name) - 10
                     arr = textwrap.wrap(mess, max_char)
 
                     for k in range(len(arr) - 1, 0, -1):
-                        out.append(self.Messages(len(name) * " ", date, color, arr[k], mess_id, read))
+                        out.append(self.Messages(len(name) * " ", color, arr[k]))
 
-                    out.append(self.Messages(name, date, color, arr[0], mess_id, read))
+                    out.append(self.Messages(name, color, arr[0]))
                 else:
-                    out.append(self.Messages(name, date, color, mess, mess_id, read))
+                    out.append(self.Messages(name, color, mess))
             # multiline message
             else:
                 mess = mess.split("\n")
                 for j in range(len(mess) - 1, 0, -1):
-                    if len(mess[j]) + len(name) + len(read) > self.width - 10:
+                    if len(mess[j]) + len(name) > self.width - 10:
                         max_char = self.width - len(name) - 10
                         arr = textwrap.wrap(mess[j], max_char)
 
                         for k in range(len(arr) - 1, -1, -1):
-                            out.append(self.Messages(len(name) * " ", date, color, arr[k], mess_id, read))
+                            out.append(self.Messages(len(name) * " ", color, mess[j]))
                     else:
-                        out.append(self.Messages(len(name) * " ", date, color, mess[j], mess_id, read))
+                        out.append(self.Messages(len(name) * " ", color, mess[j]))
 
-                if len(mess[0]) + len(name) + len(read) > self.width - 10:
+                if len(mess[0]) + len(name) > self.width - 10:
                     max_char = self.width - len(name) - 10
                     arr = textwrap.wrap(mess[0], max_char)
 
                     for k in range(len(arr) - 1, 0, -1):
-                        out.append(self.Messages(len(name) * " ", date, color, arr[k], mess_id, read))
+                        out.append(self.Messages(len(name) * " ", color, arr[k]))
 
-                    out.append(self.Messages(name, date, color, arr[0], mess_id, read))
+                    out.append(self.Messages(name, color, arr[0]))
                 else:
-                    out.append(self.Messages(name, date, color, mess[0], mess_id, read))
+                    out.append(self.Messages(name, color, mess[0]))

@@ -2,10 +2,13 @@ import utils
 
 HP = 'hp'
 XP = 'xp'
+MAX_HP = 'max_hp'
+MAX_XP = 'max_xp'
 
 AC = 'ac'
 INIT = 'init'
 SPD = 'spd'
+PWR = 'pwr'
 
 CHR = 'chr'
 INT = 'int'
@@ -31,7 +34,8 @@ class Stat:
 DEFAULT_BATTLE_STATS = {
     AC: 4,
     INIT: 4,
-    SPD: 4
+    SPD: 4,
+    PWR: 3
 }
 
 DEFAULT_PERSON_STATS = {
@@ -80,6 +84,11 @@ class Character:
         if name == XP:
             return self.xp
 
+        if name == MAX_HP:
+            return self.max_health
+        if name == MAX_XP:
+            return self.max_xp
+
         # have this so I can maybe make some calcs using items?
         if name in self.battle_stats:
             return self.battle_stats[name]
@@ -87,11 +96,19 @@ class Character:
             return self.person_stats[name]
 
     def set_stat(self, name, value):
+        value = int(value)
         if name == HP:
-            self.health = utils.clamp(int(value), 0, self.max_health)
+           self.health = value
         elif name == XP:
-            self.xp = utils.clamp(int(value), 0, self.max_xp)
+            value = utils.clamp(value, 0, self.max_xp)
+            self.xp = value
+        elif name == MAX_HP:
+            self.max_health = value
+        elif name == MAX_XP:
+            self.max_xp = value
         elif name in self.battle_stats:
-            self.battle_stats[name] = int(value)
+            self.battle_stats[name] = value
         else:
-            self.person_stats[name] = int(value)
+            self.person_stats[name] = value
+
+        return value

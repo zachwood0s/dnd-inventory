@@ -14,7 +14,7 @@ class _Manager:
         self.my_player_name = None
         self.set_handlers = []
         self.character_update_handlers: List[CharacterHandler] = []
-        self.log_messages: List[packet.Packet] = []
+        self.chat_messages: List[packet.Packet] = []
         self.chat_update_handlers: List[ChatHandler] = []
 
 
@@ -31,6 +31,7 @@ def _normalize_name(name):
 def load_character():
     global _manager
     new_char = character.Character()
+    new_char.name = 'Snapps Simmershell'
     new_char.xp = 40
     _manager.my_player_name = new_char.name
     _manager.players[new_char.name] = new_char
@@ -40,6 +41,11 @@ def get_player(name) -> character.Character:
     global _manager
     name = _normalize_name(name)
     return _manager.players[name]
+
+
+def get_my_player_name() -> str:
+    global _manager
+    return _manager.my_player_name
 
 
 def set_player(name, new_character, msg=None) -> None:
@@ -58,14 +64,14 @@ def add_update_handler(handler: CharacterHandler):
 
 def add_chat_message(packet: packet.Packet):
     global _manager
-    _manager.log_messages.append(packet)
+    _manager.chat_messages.insert(0, packet)
     for h in _manager.chat_update_handlers:
         h(packet)
 
 
 def get_chat_messages() -> List[packet.Packet]:
     global _manager
-    return _manager.log_messages
+    return _manager.chat_messages
 
 
 def add_chat_update_handler(handler: ChatHandler):
@@ -77,20 +83,3 @@ def get_players() -> List[character.Character]:
     global _manager
     return list(_manager.players.values())
 
-
-class ResourceManager:
-
-    def __init__(self) -> None:
-        self.my_player_name = None
-        self.players = {}
-
-    def get_player(self, name) -> character.Character:
-        if name == ME:
-            name = self.my_player_name
-        return self.players[name]
-
-    def load_character(self):
-        new_char = character.Character()
-        new_char.xp = 40
-        self.my_player_name = new_char.name
-        self.players[new_char.name] = new_char

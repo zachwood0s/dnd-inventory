@@ -64,7 +64,7 @@ class Slider(widget.Widget):
                 )
             
             # If want to handle neg. numbers, this line would need changing.
-        blocks_to_fill = (float(self.value) / float(self.out_of)) * int(blocks_on_screen)
+        blocks_to_fill = (float(min(self.value, self.out_of)) / float(self.out_of)) * int(blocks_on_screen)
     
         if self.editing:
             self.parent.curses_pad.attron(curses.A_BOLD)
@@ -108,8 +108,6 @@ class Slider(widget.Widget):
 
         else:
             self.__value = val
-
-        if self.__value > self.out_of: raise ValueError
 
     def get_value(self):
         return float(self.__value)

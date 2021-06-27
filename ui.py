@@ -18,11 +18,12 @@ class MainForm(npyscreen.FormBaseNew):
     def create(self):
         y, x = self.useable_space()
 
-        log_width = (x // 4)
+        log_width = (x // 3)
 
         # create ui
         self.messageBoxObj = self.add(messageBox.MessageBox, name='Log', rely=2, relx=(x - log_width),
-                                      max_height=-5, editable=False)
+                                      max_height=-5, editable=False, custom_highlighting=True,
+                                      highlighting_arr_color_data=[0])
         self.inputBoxObj = self.add(inputBox.InputBox, footer='Input', rely=-7, relx=(x - log_width), editable=True)
         self.inputBoxObj.create()
 
@@ -45,17 +46,23 @@ class MainForm(npyscreen.FormBaseNew):
                                  relx=bar_xs[1], rely=2, editable=False,
                                  contained_widget_arguments=bar_args)
 
+
         # BATTLE STATS
         stat_padding = 4
-        stat_width, stat_xs = columns(remaining_width, len(character.DEFAULT_BATTLE_STATS), stat_padding)
+        num_cols = len(character.DEFAULT_BATTLE_STATS) + 2 # add two for the two empty columns for the name
+        stat_width, stat_xs = columns(remaining_width, num_cols, stat_padding)
         stat_height = 4
         stat_y = 6
 
+        self.nameObj = self.add(statBox.StatBox, name='NAME', values=[''], color='WARNING', editable=False,
+                                max_width=stat_width*2 + stat_padding, max_height=stat_height,
+                                relx=stat_xs[0], rely=stat_y)
+
         self.statObjs = {}
         for idx, (stat, val) in enumerate(character.DEFAULT_BATTLE_STATS.items()):
-            self.statObjs[stat] = self.add(statBox.StatBox, name=stat.upper(), values=[str(val)], color='NO_EDIT',
+            self.statObjs[stat] = self.add(statBox.StatBox, name=stat.upper(), values=[str(val)], color='VERYGOOD',
                                            editable=False,
-                                           max_width=stat_width, max_height=stat_height, relx=stat_xs[idx], rely=stat_y)
+                                           max_width=stat_width, max_height=stat_height, relx=stat_xs[idx+2], rely=stat_y)
 
         # PERSON STATS
         person_padding = 4
@@ -65,7 +72,7 @@ class MainForm(npyscreen.FormBaseNew):
 
         self.personObjs = {}
         for idx, (person, val) in enumerate(character.DEFAULT_PERSON_STATS.items()):
-            self.personObjs[person] = self.add(statBox.StatBox, name=person.upper(), values=[str(val)], color='NO_EDIT',
+            self.personObjs[person] = self.add(statBox.StatBox, name=person.upper(), values=[str(val)], color='VERYGOOD',
                                                editable=False,
                                                max_width=person_width, max_height=person_height, relx=person_xs[idx],
                                                rely=person_y)
@@ -87,7 +94,7 @@ class MainForm(npyscreen.FormBaseNew):
 
         self.add_handlers(new_handlers)
         resourceManager.add_update_handler(self.character_update_handler)
-        # self.messageBoxObj.update_chat(None)
+        resourceManager.add_chat_update_handler(self.chat_update_handler)
 
     def event_input_send(self):
         text = self.inputBoxObj.value
@@ -99,6 +106,9 @@ class MainForm(npyscreen.FormBaseNew):
 
     def exit_func(self, _input):
         exit(0)
+
+    def chat_update_handler(self, _packet):
+        self.messageBoxObj.update_messages()
 
     def character_update_handler(self, _msg, _name, _character):
         self.update_character()
@@ -118,9 +128,11 @@ class MainForm(npyscreen.FormBaseNew):
         player = resourceManager.get_player(resourceManager.ME)
 
         self.xpbarObj.value = player.xp
-        self.xpbarObj.entry_widget.out_of = player.xp
+        self.xpbarObj.entry_widget.out_of = player.max_xp
         self.healthBarObj.value = player.health
         self.healthBarObj.entry_widget.out_of = player.max_health
+
+        self.nameObj.values = [player.name]
 
         for stat in player.battle_stats:
             self.statObjs[stat].values = [player.get_stat(stat)]

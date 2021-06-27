@@ -3,7 +3,9 @@ import typing
 import re
 import random
 
-import npyscreen
+import packet
+from packet import MessageType
+
 import resourceManager
 
 _DICE_REGEX = re.compile('([0-9]*)d([0-9]+)([+-]?)')
@@ -62,8 +64,13 @@ def parse_set_command(command: typing.List[str]):
     (_, name, stat, value,) = command
     player = resourceManager.get_player(name)
     old_value = player.get_stat(stat)
-    player.set_stat(stat, value)
+    value = player.set_stat(stat, value)
     resourceManager.set_player(name, player, f'Changed {name} {stat} from {old_value} to {value}')
+
+    msg = f"changed {resourceManager.get_my_player_name()}'s {stat} from {old_value} to {value}"
+    pkt = packet.Packet(MessageType.Message, None, resourceManager.get_my_player_name(), [msg],
+                        origin_command=' '.join(command))
+    resourceManager.add_chat_message(pkt)
 
 
 COMMAND_MAPPING = {
@@ -79,4 +86,7 @@ def parse_command(input: str):
 
     handler = COMMAND_MAPPING.get(command[0])
     if handler is not None:
-        handler(command)
+        try:
+            handler(command)
+        except Exception as e:
+            print(e)

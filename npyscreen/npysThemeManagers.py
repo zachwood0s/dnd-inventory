@@ -61,7 +61,7 @@ class ThemeManager(object):
         'CRITICAL'    : 'BLACK_RED',
         'GOOD'        : 'GREEN_BLACK',
         'GOODHL'      : 'GREEN_BLACK',
-        'VERYGOOD'    : 'BLACK_GREEN',
+        'VERYGOOD'    : 'CYAN_BLACK',
         'CAUTION'     : 'YELLOW_BLACK',
         'CAUTIONHL'   : 'BLACK_YELLOW',
     }
