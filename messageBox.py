@@ -100,7 +100,8 @@ class MessageBox(npyscreen.BoxTitle):
                         arr = textwrap.wrap(mess[j], max_char)
 
                         for k in range(len(arr) - 1, -1, -1):
-                            out.append(self.Messages(len(name) * " ", color, mess[j]))
+                            print(arr[k], mess[j])
+                            out.append(self.Messages(len(name) * " ", color, arr[k]))
                     else:
                         out.append(self.Messages(len(name) * " ", color, mess[j]))
 

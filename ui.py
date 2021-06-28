@@ -8,6 +8,7 @@ import statBox
 import character
 import commandHandler
 import resourceManager
+import commands
 
 MAX_WIDTH = 150
 MAX_HEIGHT = 50

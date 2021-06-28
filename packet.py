@@ -11,7 +11,7 @@ class MessageType(enum.Enum):
 @dataclass(frozen=True)
 class Packet:
     type: MessageType
-    recvr: str
+    receiver: typing.Optional[str]
     sender: str
     data: typing.List[str]
     origin_command: str = None

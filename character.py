@@ -73,11 +73,11 @@ class Character:
         self.battle_stats = dict(DEFAULT_BATTLE_STATS)
         self.person_stats = dict(DEFAULT_PERSON_STATS)
 
-        self.items = []
+        self.items = [Item('fake', 'item')]
 
         self.abilities = []
 
-    def get_stat(self, name) -> str:
+    def get_stat(self, name) -> int:
         if name == HP:
             return self.health
 
