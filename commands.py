@@ -1,5 +1,4 @@
 from typing import List
-from types import SimpleNamespace
 import random
 import re
 import hjson
@@ -11,8 +10,7 @@ import packet
 import utils
 import character
 
-from packet import MessageType
-
+from packet import MessageType, make_character_packet, make_chat_packet
 
 _DICE_REGEX = re.compile('([0-9]*)d([0-9]+)([+-]?)')
 
@@ -75,8 +73,8 @@ def roll2_command(command: List[str]):
     if adv:
         msg.extend([roll2, f'= {adv_str(adv)} {total}'])
 
-    pkt = packet.Packet(MessageType.Message, None, resourceManager.get_my_player_name(), msg,
-                        origin_command=' '.join(command))
+    origin_command = ' '.join(command)
+    pkt = make_chat_packet(msg, resourceManager.get_my_player_name(), origin_command)
     resourceManager.add_chat_message(pkt)
 
 
@@ -103,7 +101,7 @@ def roll4_command(command: List[str]):
     roll_amt, dice, adv = parse_dice_amt(dice_fmt)
     total, roll1, roll2 = perform_rolls(roll_amt, dice, adv)
     overall_total = total + stat
-    msg = [f'Rolling {dice_fmt}:', roll1]
+    msg = [f"Rolling {dice_fmt} on {player}'s {trait}:", roll1]
     if adv:
         msg.extend([roll2, f'= {adv_str(adv)} {total} + ({trait}) {stat} '])
     else:
@@ -111,8 +109,8 @@ def roll4_command(command: List[str]):
 
     msg.append(f'= {overall_total}')
 
-    pkt = packet.Packet(MessageType.Message, None, resourceManager.get_my_player_name(), msg,
-                        origin_command=' '.join(command))
+    origin_command = ' '.join(command)
+    pkt = make_chat_packet(msg, resourceManager.get_my_player_name(), origin_command)
     resourceManager.add_chat_message(pkt)
 
 
@@ -121,14 +119,16 @@ def set_command(command: List[str]):
     (_, name, stat, value,) = command
     player = resourceManager.get_player(name)
     old_value = player.get_stat(stat)
-    value = player.set_stat(stat, value)
-    resourceManager.set_player(name, player, f'Changed {name} {stat} from {old_value} to {value}')
+    player.set_stat(stat, value)
 
-    msg = f"changed {resourceManager.get_my_player_name()}'s {stat} from {old_value} to {value}"
-    pkt = packet.Packet(MessageType.Message, None, resourceManager.get_my_player_name(), [msg],
-                        origin_command=' '.join(command))
-    resourceManager.add_chat_message(pkt)
+    msg = f"Changed {player.get_stat(character.NAME)}'s {stat} from {old_value} to {value}"
+    me = resourceManager.get_my_player_name()
+    origin_command = ' '.join(command)
+    chat_pkt = make_chat_packet([msg], me, origin_command)
+    character_pkt = make_character_packet(player, me, origin_command)
 
+    resourceManager.set_player(character_pkt)
+    resourceManager.add_chat_message(chat_pkt)
 
 
 _DEFAULT_DATA_DIRECTORY = 'data'
@@ -173,7 +173,9 @@ def load_command(command: List[str]):
     with p.open(mode='r') as f:
         data = hjson.load(f, cls=ObjDecoder)
 
-        if type(data) == character.Character:
+        if type(data) is character.Character:
             data: character.Character
-            resourceManager.set_player(data.name, data)
+            origin_command = ' '.join(command)
+            pkt = make_character_packet(data, resourceManager.get_my_player_name(), origin_command)
+            resourceManager.set_player(pkt)
 

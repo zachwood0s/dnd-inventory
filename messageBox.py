@@ -1,9 +1,11 @@
 import npyscreen
 import textwrap
 import resourceManager
+import character
 
 MY_COLOR = 'VERYGOOD'
 OTHER_COLOR = 'WARNING'
+
 
 class MessageBox(npyscreen.BoxTitle):
 
@@ -42,7 +44,7 @@ class MessageBox(npyscreen.BoxTitle):
 
         # get user info
         users = resourceManager.get_players()
-        max_name_len = max(len(textwrap.wrap(u.name, self.width // 5)[0]) for u in users)
+        max_name_len = max(len(textwrap.wrap(u.get_stat(character.NAME), self.width // 5)[0]) for u in users)
 
         out = []
         for msg in messages:

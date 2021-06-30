@@ -17,6 +17,8 @@ MAX_HEIGHT = 50
 class MainForm(npyscreen.FormBaseNew):
 
     def create(self):
+        self.footer = ' Connected '
+        self.name = 'DND Inventory'
         y, x = self.useable_space()
 
         log_width = (x // 3)
@@ -94,8 +96,10 @@ class MainForm(npyscreen.FormBaseNew):
         }
 
         self.add_handlers(new_handlers)
-        resourceManager.add_update_handler(self.character_update_handler)
+        resourceManager.add_character_update_handler(self.character_update_handler)
         resourceManager.add_chat_update_handler(self.chat_update_handler)
+        resourceManager.add_connected_update_handler(self.connected_update_handler)
+        self.connected_update_handler(False)
 
     def event_input_send(self):
         text = self.inputBoxObj.value
@@ -106,12 +110,20 @@ class MainForm(npyscreen.FormBaseNew):
         self.parentApp.setNextForm(None)
 
     def exit_func(self, _input):
-        exit(0)
+        self.parentApp.switchForm(None)
+
+    def connected_update_handler(self, connected: bool):
+        if resourceManager.get_is_connected():
+            self.footer = ' Connected '
+        else:
+            self.footer = ' Disconnected '
+
+        self.display()
 
     def chat_update_handler(self, _packet):
         self.messageBoxObj.update_messages()
 
-    def character_update_handler(self, _msg, _name, _character):
+    def character_update_handler(self, _packet):
         self.update_character()
         self.display()
         self.xpbarObj.display()
@@ -128,12 +140,12 @@ class MainForm(npyscreen.FormBaseNew):
     def update_character(self):
         player = resourceManager.get_player(resourceManager.ME)
 
-        self.xpbarObj.value = player.xp
-        self.xpbarObj.entry_widget.out_of = player.max_xp
-        self.healthBarObj.value = player.health
-        self.healthBarObj.entry_widget.out_of = player.max_health
+        self.xpbarObj.value = player.get_stat(character.XP)
+        self.xpbarObj.entry_widget.out_of = player.get_stat(character.MAX_XP)
+        self.healthBarObj.value = player.get_stat(character.HP)
+        self.healthBarObj.entry_widget.out_of = player.get_stat(character.MAX_HP)
 
-        self.nameObj.values = [player.name]
+        self.nameObj.values = [player.get_stat(character.NAME)]
 
         for stat in player.battle_stats:
             self.statObjs[stat].values = [player.get_stat(stat)]
@@ -142,6 +154,11 @@ class MainForm(npyscreen.FormBaseNew):
             self.personObjs[stat].values = [player.get_stat(stat)]
 
         print('character sheet updated')
+
+    def draw_title_and_help(self):
+        super().draw_title_and_help()
+
+        self.add_line(self.lines - 1, 5, self.footer, self.make_attributes_list(self.footer, curses.A_NORMAL), self.columns - 4)
 
 
 class App(npyscreen.StandardApp):

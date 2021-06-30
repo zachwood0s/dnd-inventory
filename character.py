@@ -1,12 +1,13 @@
-import utils
+from typing import Union
 
+NAME = 'name'
 HP = 'hp'
 XP = 'xp'
 MAX_HP = 'max_hp'
 MAX_XP = 'max_xp'
 
 AC = 'ac'
-INIT = 'init'
+INIT = 'ini'
 SPD = 'spd'
 PWR = 'pwr'
 
@@ -47,6 +48,14 @@ DEFAULT_PERSON_STATS = {
     CON: 4,
 }
 
+DEFAULT_CHARACTER_TRAITS = {
+    HP: 0,
+    MAX_HP: 10,
+    XP: 0,
+    MAX_XP: 10,
+    NAME: 'NoName',
+}
+
 
 class Item:
     def __init__(self, name, desc) -> None:
@@ -62,53 +71,27 @@ class Ability:
 
 class Character:
     def __init__(self) -> None:
-        self.name = 'NoName'
-
-        self.health = 0
-        self.max_health = 10
-
-        self.xp = 0
-        self.max_xp = 100
-
         self.battle_stats = dict(DEFAULT_BATTLE_STATS)
         self.person_stats = dict(DEFAULT_PERSON_STATS)
+        self.other_traits = dict(DEFAULT_CHARACTER_TRAITS)
 
         self.items = [Item('fake', 'item')]
 
         self.abilities = []
 
-    def get_stat(self, name) -> int:
-        if name == HP:
-            return self.health
-
-        if name == XP:
-            return self.xp
-
-        if name == MAX_HP:
-            return self.max_health
-        if name == MAX_XP:
-            return self.max_xp
-
-        # have this so I can maybe make some calcs using items?
+    def get_stat(self, name) -> Union[int, str]:
         if name in self.battle_stats:
             return self.battle_stats[name]
-        else:
+        elif name in self.person_stats:
             return self.person_stats[name]
+        else:
+            return self.other_traits[name]
 
     def set_stat(self, name, value):
-        value = int(value)
-        if name == HP:
-           self.health = value
-        elif name == XP:
-            value = utils.clamp(value, 0, self.max_xp)
-            self.xp = value
-        elif name == MAX_HP:
-            self.max_health = value
-        elif name == MAX_XP:
-            self.max_xp = value
-        elif name in self.battle_stats:
+        value = int(value) if name != NAME else value
+        if name in self.battle_stats:
             self.battle_stats[name] = value
-        else:
+        elif name in self.person_stats:
             self.person_stats[name] = value
-
-        return value
+        else:
+            self.other_traits[name] = value
