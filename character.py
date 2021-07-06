@@ -1,4 +1,5 @@
 from typing import Union
+from dataclasses import dataclass
 
 NAME = 'name'
 HP = 'hp'
@@ -57,16 +58,33 @@ DEFAULT_CHARACTER_TRAITS = {
 }
 
 
-class Item:
-    def __init__(self, name, desc) -> None:
-        self.name = name
-        self.desc = desc
+@dataclass
+class EffectStats:
+    hp: int = 0
+    ac: int = 0
+    init: int = 0
+    spd: int = 0
+    chr: int = 0
+    intel: int = 0
+    wis: int = 0
+    str: int = 0
+    dex: int = 0
+    con: int = 0
 
 
-class Ability:
-    def __init__(self, name, desc) -> None:
-        self.name = name
-        self.desc = desc
+@dataclass
+class Effect:
+    name: str
+    desc: str
+    stats: EffectStats
+
+
+class Item(Effect):
+    pass
+
+
+class Ability(Effect):
+    pass
 
 
 class Character:
@@ -75,9 +93,9 @@ class Character:
         self.person_stats = dict(DEFAULT_PERSON_STATS)
         self.other_traits = dict(DEFAULT_CHARACTER_TRAITS)
 
-        self.items = [Item('fake', 'item')]
-
+        self.items = []
         self.abilities = []
+        self.effects = []
 
     def get_stat(self, name) -> Union[int, str]:
         if name in self.battle_stats:

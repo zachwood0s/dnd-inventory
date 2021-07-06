@@ -90,11 +90,11 @@ def roll2_command(command: List[str]):
     else:
         adv = ''
     new_command = [command[0], f'd20{adv}', player, trait]
-    roll4_command(new_command)
+    roll3_command(new_command)
 
 
 @commandHandler.register_command('roll', n_args=3, help_text='roll <dice_fmt> <player> <trait>')
-def roll4_command(command: List[str]):
+def roll3_command(command: List[str]):
     (_, dice_fmt, player, trait) = command
     p = resourceManager.get_player(player)
     stat = p.get_stat(trait)

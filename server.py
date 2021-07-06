@@ -17,6 +17,14 @@ class DNDServer(Protocol):
     def connectionMade(self):
         # self.factory was set by the factory's default buildProtocol:
         print('New user connected with id: ', self.id)
+
+        if len(self.users) > 0:
+            # Need to sync the data to the new user
+            user = next(iter(self.users.values()))
+            pkt = packet.make_sync_request_packet(None, '', 'server request')
+            pickled = pickle.dumps(pkt)
+            user.transport.write(pickled)
+
         self.users[self.id] = self
 
     def connectionLost(self, reason):

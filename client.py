@@ -20,8 +20,7 @@ class DNDClient(Protocol):
         def worker(pkt):
             reactor.callFromThread(self.packet_listener, pkt)
 
-        resourceManager.add_character_update_handler(worker)
-        resourceManager.add_chat_update_handler(worker)
+        resourceManager.add_message_handler(worker)
 
     def connectionMade(self):
         print("connected")
@@ -37,10 +36,6 @@ class DNDClient(Protocol):
 
     def packet_listener(self, pkt: packet.Packet):
         if self.connected:
-
-            if pkt.sender != resourceManager.get_my_player_name():
-                # This packet is not mine to send
-                return
 
             print('sending packet', pkt.data)
             pickled = pickle.dumps(pkt)

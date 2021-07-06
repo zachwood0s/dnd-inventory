@@ -11,7 +11,7 @@ import resourceManager
 import commands
 
 MAX_WIDTH = 150
-MAX_HEIGHT = 50
+MAX_HEIGHT = 60
 
 
 class MainForm(npyscreen.FormBaseNew):
@@ -25,8 +25,14 @@ class MainForm(npyscreen.FormBaseNew):
 
         # create ui
         self.messageBoxObj = self.add(messageBox.MessageBox, name='Log', rely=2, relx=(x - log_width),
-                                      max_height=-5, editable=False, custom_highlighting=True,
+                                      max_height=-15, editable=False, custom_highlighting=True,
                                       highlighting_arr_color_data=[0])
+
+        # create ui
+        self.logBoxObj = self.add(messageBox.MessageBox, name='Errors', relx=(x - log_width),
+                                  max_height=10, editable=False, custom_highlighting=True,
+                                  highlighting_arr_color_data=[0])
+
         self.inputBoxObj = self.add(inputBox.InputBox, footer='Input', rely=-7, relx=(x - log_width), editable=True)
         self.inputBoxObj.create()
 
@@ -83,8 +89,17 @@ class MainForm(npyscreen.FormBaseNew):
         # ITEMS
         remaining_height = y - (person_y + person_height)
         item_padding = 2
+
+        # ABILITIES
+        effect_args = {'column_width': 6}
+        self.effects = self.add(statBox.StatGrid, name='Effects', max_width=remaining_width - 2 * item_padding,
+                                max_height=(remaining_height // 3), contained_widget_arguments=effect_args)
+
+        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).effects)
+        self.effects.update_rows()
+
         self.itemsObj = self.add(statBox.StatBox, name='Items', max_width=remaining_width - 2 * item_padding,
-                                 max_height=(remaining_height // 2))
+                                 max_height=(remaining_height // 3))
 
         # ABILITIES
         self.abilitiesObj = self.add(statBox.StatBox, name='Abilities', max_width=remaining_width - 2 * item_padding)
