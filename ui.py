@@ -91,19 +91,23 @@ class MainForm(npyscreen.FormBaseNew):
         item_padding = 2
 
         # ABILITIES
-        self.effects = self.add(statBox.StatGrid, name='Effects', max_width=remaining_width - 2 * item_padding,
-                                max_height=(remaining_height // 3))
+        grid_args = {'column_percents': []}
+        self.effects = self.add(statBox.StatGridBox, name='Effects', max_width=remaining_width - 2 * item_padding,
+                                max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
 
         self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects())
         self.effects.update_rows(None)
 
-        self.itemsObj = self.add(statBox.StatGrid, name='Items', max_width=remaining_width - 2 * item_padding,
-                                 max_height=(remaining_height // 3))
+        grid_args = {'column_percents': []}
+        self.itemsObj = self.add(statBox.StatGridBox, name='Items', max_width=remaining_width - 2 * item_padding,
+                                 max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
         self.itemsObj.create(lambda: resourceManager.get_player(resourceManager.ME).items)
         self.itemsObj.update_rows(None)
 
         # ABILITIES
-        self.abilitiesObj = self.add(statBox.StatGrid, name='Abilities', max_width=remaining_width - 2 * item_padding)
+        grid_args = {'column_percents': []}
+        self.abilitiesObj = self.add(statBox.StatGridBox, name='Abilities', max_width=remaining_width - 2 * item_padding,
+                                     contained_widget_arguments=grid_args)
         self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).abilities)
         self.abilitiesObj.update_rows(None)
 
