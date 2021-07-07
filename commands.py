@@ -139,6 +139,7 @@ def set_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
+# region Item Commands
 @commandHandler.register_command('give', n_args=2, help_text='give <player> <item_id>')
 def give_command(command: List[str]):
     (_, name, item_id) = command
@@ -155,7 +156,7 @@ def give_command(command: List[str]):
         print("no no no item not exist")
         return
 
-    msg = f"{player.get_stat(character.NAME)} has received {item_id}"
+    msg = f"{player.get_stat(character.NAME)} has received {resourceManager.get_item(item_id).name}"
     _update_player_and_chat(command, msg, player)
 
 
@@ -175,10 +176,40 @@ def take_command(command: List[str]):
         print("no no no item not exist in player")
         return
 
-    msg = f"{player.get_stat(character.NAME)} has lost {item_id}"
+    msg = f"{player.get_stat(character.NAME)} has lost {resourceManager.get_item(item_id).name}"
     _update_player_and_chat(command, msg, player)
 
 
+@commandHandler.register_command('use', n_args=1, help_text='use <item_id>')
+def use_command(command: List[str]):
+    (_, item_id) = command
+    player = resourceManager.get_player(resourceManager.get_my_player_name())
+    if item_id in player.items:
+        player.active_items.append(item_id)
+    else:
+        print("no no no item not exist in player")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has used {resourceManager.get_item(item_id).name}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('unuse', n_args=1, help_text='unuse <item_id>')
+def unuse_command(command: List[str]):
+    (_, item_id) = command
+    player = resourceManager.get_player(resourceManager.get_my_player_name())
+    if item_id in player.items:
+        player.active_items.remove(item_id)
+    else:
+        print("no no no item not exist in player")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has stopped using {resourceManager.get_item(item_id).name}"
+    _update_player_and_chat(command, msg, player)
+
+# endregion
+
+# region Ability Commands
 @commandHandler.register_command('learn', n_args=2, help_text='learn <player> <ability_id>')
 def learn_command(command: List[str]):
     (_, name, ability_id) = command
@@ -189,7 +220,7 @@ def learn_command(command: List[str]):
         print("no no no ability not exist")
         return
 
-    msg = f"{player.get_stat(character.NAME)} has learned {ability_id}"
+    msg = f"{player.get_stat(character.NAME)} has learned {resourceManager.get_ability(ability_id).name}"
     _update_player_and_chat(command, msg, player)
 
 
@@ -203,8 +234,11 @@ def forget_command(command: List[str]):
         print("no no no ability not exist in player")
         return
 
-    msg = f"{player.get_stat(character.NAME)} has forgotten {ability_id}"
+    msg = f"{player.get_stat(character.NAME)} has forgotten {resourceManager.get_ability(ability_id).name}"
     _update_player_and_chat(command, msg, player)
+# endregion
+
+# region Effect Commands
 
 
 @commandHandler.register_command('effect', n_args=2, help_text='effect <player> <effect_id>')
@@ -219,7 +253,7 @@ def effect_command(command: List[str]):
         print(effect_id)
         return
 
-    msg = f"{player.get_stat(character.NAME)} is now effected by {effect_id}"
+    msg = f"{player.get_stat(character.NAME)} is now effected by {resourceManager.get_effect(effect_id).name}"
     _update_player_and_chat(command, msg, player)
 
 
@@ -234,8 +268,10 @@ def remedy_command(command: List[str]):
         print("no no no effect not exist in player")
         return
 
-    msg = f"{player.get_stat(character.NAME)} is no longer effected by {effect_id}"
+    msg = f"{player.get_stat(character.NAME)} is no longer effected by {resourceManager.get_effect(effect_id).name}"
     _update_player_and_chat(command, msg, player)
+
+# endregion
 
 
 _DEFAULT_DATA_DIRECTORY = 'data'

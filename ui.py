@@ -10,7 +10,7 @@ import commandHandler
 import resourceManager
 import commands
 
-MAX_WIDTH = 150
+MAX_WIDTH = 210
 MAX_HEIGHT = 60
 
 
@@ -21,7 +21,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.name = 'DND Inventory'
         y, x = self.useable_space()
 
-        log_width = (x // 3)
+        log_width = (x // 4)
 
         # create ui
         self.messageBoxObj = self.add(messageBox.MessageBox, name='Log', rely=2, relx=(x - log_width),

@@ -50,7 +50,8 @@ class StatGrid(npyscreen.BoxTitle):
         rows = []
         for item in items:
             i = resourceManager.get_item(item)
-            rows.append([i.name, _str_item_traits(i.passives), _str_item_traits(i.actives), me.item_qtys[item]])
+            front = '(Using) ' if item in me.active_items else ''
+            rows.append([front + i.name, _str_item_traits(i.passives), _str_item_traits(i.actives), me.item_qtys[item]])
 
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles

@@ -109,7 +109,7 @@ class Character:
     def get_effects(self) -> List[str]:
         passive_item_effects = (eff for item in self.items for eff in resourceManager.get_item(item).passives)
         active_item_effects = (eff for item in self.items
-                               for eff in resourceManager.get_item(item).passives if item in self.active_items)
+                               for eff in resourceManager.get_item(item).actives if item in self.active_items)
         ability_effects = (eff for ability in self.abilities for eff in resourceManager.get_ability(ability).effects)
         effects = iter(self.effects)
         all_effects = itertools.chain(effects, passive_item_effects, active_item_effects, ability_effects)
