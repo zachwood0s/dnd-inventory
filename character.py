@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, Dict
 from dataclasses import dataclass
 import itertools
 import resourceManager
@@ -101,6 +101,7 @@ class Character:
         self.other_traits = dict(DEFAULT_CHARACTER_TRAITS)
 
         self.items: List[str] = []
+        self.item_qtys: Dict[str, int] = {}
         self.active_items: List[str] = []
         self.abilities: List[str] = []
         self.effects: List[str] = []
@@ -123,6 +124,7 @@ class Character:
             return self.other_traits[name]
 
     def calc_stat(self, name):
+        # TODO: Handle stackable item effects
         stat = self.raw_stat(name)
         all_effects = self.get_effects()
         filtered_traits = [t for e in all_effects for t in resourceManager.get_effect(e).traits if t.name == name]

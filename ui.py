@@ -97,11 +97,15 @@ class MainForm(npyscreen.FormBaseNew):
         self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects())
         self.effects.update_rows(None)
 
-        self.itemsObj = self.add(statBox.StatBox, name='Items', max_width=remaining_width - 2 * item_padding,
+        self.itemsObj = self.add(statBox.StatGrid, name='Items', max_width=remaining_width - 2 * item_padding,
                                  max_height=(remaining_height // 3))
+        self.itemsObj.create(lambda: resourceManager.get_player(resourceManager.ME).items)
+        self.itemsObj.update_rows(None)
 
         # ABILITIES
-        self.abilitiesObj = self.add(statBox.StatBox, name='Abilities', max_width=remaining_width - 2 * item_padding)
+        self.abilitiesObj = self.add(statBox.StatGrid, name='Abilities', max_width=remaining_width - 2 * item_padding)
+        self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).abilities)
+        self.abilitiesObj.update_rows(None)
 
         # init handlers
         new_handlers = {
@@ -112,6 +116,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.add_handlers(new_handlers)
         resourceManager.add_character_update_handler(self.character_update_handler)
         resourceManager.add_character_update_handler(self.effects.update_rows)
+        resourceManager.add_character_update_handler(self.itemsObj.update_rows)
         resourceManager.add_chat_update_handler(self.chat_update_handler)
         resourceManager.add_connected_update_handler(self.connected_update_handler)
         self.connected_update_handler(False)

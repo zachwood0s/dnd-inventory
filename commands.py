@@ -144,7 +144,13 @@ def give_command(command: List[str]):
     (_, name, item_id) = command
     player = resourceManager.get_player(name)
     if resourceManager.has_item(item_id):
-        player.items.append(item_id)
+        if item_id in player.item_qtys:
+            # The player already has one, increase the qty
+            player.item_qtys[item_id] += 1
+        else:
+            # Need to add the item to the player
+            player.items.append(item_id)
+            player.item_qtys[item_id] = 1
     else:
         print("no no no item not exist")
         return
@@ -158,7 +164,13 @@ def take_command(command: List[str]):
     (_, name, item_id) = command
     player = resourceManager.get_player(name)
     if item_id in player.items:
-        player.items.remove(item_id)
+        if player.item_qtys[item_id] > 1:
+            # If the player has more than one then simply decrease the amount
+            player.item_qtys[item_id] -= 1
+        else:
+            # Otherwise we need to completely remove the item
+            player.items.remove(item_id)
+            del player.item_qtys[item_id]
     else:
         print("no no no item not exist in player")
         return
