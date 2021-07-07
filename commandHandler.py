@@ -21,11 +21,10 @@ def register_command(cmd_name: str, n_args: int, help_text: str):
 
 
 def parse_command(input_str: str):
-    input_str = input_str.lower()
     print(f'Received command {input_str}')
     command = input_str.split(' ')
 
-    commands = _REGISTERED_COMMANDS.get(command[0])
+    commands = _REGISTERED_COMMANDS.get(command[0].lower())
     arg_cnt = len(command) - 1
     if commands is not None:
         handler = commands.get(arg_cnt)

@@ -1,5 +1,5 @@
 from utils import columns
-import stat
+import textwrap
 import npyscreen
 import curses
 import messageBox
@@ -29,7 +29,7 @@ class MainForm(npyscreen.FormBaseNew):
                                       highlighting_arr_color_data=[0])
 
         # create ui
-        self.logBoxObj = self.add(messageBox.MessageBox, name='Errors', relx=(x - log_width),
+        self.logBoxObj = self.add(messageBox.MessageBox, name='Console', relx=(x - log_width),
                                   max_height=10, editable=False, custom_highlighting=True,
                                   highlighting_arr_color_data=[0])
 
@@ -91,12 +91,11 @@ class MainForm(npyscreen.FormBaseNew):
         item_padding = 2
 
         # ABILITIES
-        effect_args = {'column_width': 6}
         self.effects = self.add(statBox.StatGrid, name='Effects', max_width=remaining_width - 2 * item_padding,
-                                max_height=(remaining_height // 3), contained_widget_arguments=effect_args)
+                                max_height=(remaining_height // 3))
 
-        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).effects)
-        self.effects.update_rows()
+        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects())
+        self.effects.update_rows(None)
 
         self.itemsObj = self.add(statBox.StatBox, name='Items', max_width=remaining_width - 2 * item_padding,
                                  max_height=(remaining_height // 3))
@@ -112,6 +111,7 @@ class MainForm(npyscreen.FormBaseNew):
 
         self.add_handlers(new_handlers)
         resourceManager.add_character_update_handler(self.character_update_handler)
+        resourceManager.add_character_update_handler(self.effects.update_rows)
         resourceManager.add_chat_update_handler(self.chat_update_handler)
         resourceManager.add_connected_update_handler(self.connected_update_handler)
         self.connected_update_handler(False)
@@ -163,10 +163,10 @@ class MainForm(npyscreen.FormBaseNew):
         self.nameObj.values = [player.get_stat(character.NAME)]
 
         for stat in player.battle_stats:
-            self.statObjs[stat].values = [player.get_stat(stat)]
+            self.statObjs[stat].values = player.fmt_stat(stat).splitlines()
 
         for stat in player.person_stats:
-            self.personObjs[stat].values = [player.get_stat(stat)]
+            self.personObjs[stat].values = player.fmt_stat(stat).splitlines()
 
         print('character sheet updated')
 

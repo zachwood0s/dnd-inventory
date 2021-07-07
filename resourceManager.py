@@ -12,16 +12,24 @@ MessageHandler = Callable[[packet.Packet], None]
 ConnectedHandler = Callable[[bool], None]
 
 
+class CampaignDB:
+    def __init__(self) -> None:
+        self.items: Dict[str, character.Item] = {}
+        self.abilities: Dict[str, character.Ability] = {}
+        self.effects: Dict[str, character.Effect] = {}
+
+
 class _SyncableData:
     def __init__(self) -> None:
-        self.players: Dict[str, character.Character] = {}
+        self.players: List[character.Character] = []
         self.chat_messages: List[packet.Packet] = []
+        self.campaign_db: CampaignDB = CampaignDB()
 
 
 class _Manager:
     def __init__(self) -> None:
         self.sync = _SyncableData()
-        self.my_player: character.Character = None
+        self.my_player_name: str = ''
         self.set_handlers = []
         self.character_update_handlers: List[CharacterHandler] = []
         self.chat_update_handlers: List[ChatHandler] = []
@@ -52,29 +60,87 @@ def get_is_connected() -> bool:
 def _normalize_name(name: str):
     global _manager
     if name == ME:
-        name = _manager.my_player.get_stat(character.NAME)
+        name = _manager.my_player_name
     return name
 
 
-def load_character():
-    import uuid
+def get_campaign_db() -> CampaignDB:
+    return _manager.sync.campaign_db
+
+
+def set_campaign_db(db: CampaignDB):
     global _manager
-    new_char = character.Character()
-    new_char.set_stat(character.NAME, 'Snapps Simmershell' + str(uuid.uuid4()))
-    new_char.effects.append(character.Effect(name='shid', desc='piss', stats=character.EffectStats()))
-    _manager.my_player = new_char
-    _manager.sync.players[new_char.get_stat(character.NAME)] = new_char
+    _manager.sync.campaign_db = db
+
+    for h in _manager.character_update_handlers:
+        h(None)
+
+
+def has_ability(ability_id: str) -> bool:
+    return ability_id in _manager.sync.campaign_db.abilities
+
+
+def get_ability(ability_id: str) -> character.Ability:
+    return _manager.sync.campaign_db.abilities[ability_id]
+
+
+def has_item(item_id: str) -> bool:
+    return item_id in _manager.sync.campaign_db.items
+
+
+def get_item(item_id: str) -> character.Item:
+    return _manager.sync.campaign_db.items[item_id]
+
+
+def has_effect(effect_id: str) -> bool:
+    return effect_id in _manager.sync.campaign_db.effects
+
+
+def get_effect(effect_id: str) -> character.Effect:
+    return _manager.sync.campaign_db.effects[effect_id]
+
+
+def load_data(data, command: str):
+    if type(data) is character.Character:
+        data: character.Character
+        set_my_player(data)
+
+    elif type(data) is CampaignDB:
+        data: CampaignDB
+        set_campaign_db(data)
+
+
+def load_character():
+    import commandHandler
+    global _manager
+    new_char = character.DEFAULT_CHARACTER
+    set_my_player(new_char)
+
+    commandHandler.parse_command('load campaign')
+    commandHandler.parse_command('load character')
 
 
 def get_player(name: str) -> character.Character:
     global _manager
     name = _normalize_name(name)
-    return _manager.sync.players[name]
+    for p in _manager.sync.players:
+        if p.get_stat(character.NAME) == name:
+            return p
+
+    raise ValueError(f"Character {name} does not exist")
+
+
+def has_player(name: str) -> bool:
+    try:
+        get_player(name)
+        return True
+    except ValueError:
+        return False
 
 
 def get_my_player_name() -> str:
     global _manager
-    return _manager.my_player.get_stat(character.NAME)
+    return _manager.my_player_name
 
 
 def set_player(packet_: packet.Packet, send_msg=True) -> None:
@@ -86,12 +152,24 @@ def set_player(packet_: packet.Packet, send_msg=True) -> None:
 
     new_character: character.Character = packet_.data
     name = _normalize_name(new_character.get_stat(character.NAME))
-    _manager.sync.players[name] = new_character
+    if not has_player(name):
+        _manager.sync.players.append(new_character)
+    else:
+        for i in range(len(_manager.sync.players)):
+            if _manager.sync.players[i].get_stat(character.NAME) == name:
+                _manager.sync.players[i] = new_character
 
     _manager.update_handler(_manager.character_update_handlers, packet_)
 
     if send_msg:
         _manager.update_handler(_manager.general_msg_handlers, packet_)
+
+
+def set_my_player(c: character.Character) -> None:
+    global _manager
+    _manager.my_player_name = c.get_stat(character.NAME)
+    pkt = packet.make_character_packet(c, ME, '')
+    set_player(pkt, send_msg=False)
 
 
 def add_connected_update_handler(handler: ConnectedHandler) -> ConnectedHandler:
@@ -137,7 +215,7 @@ def add_chat_update_handler(handler: ChatHandler) -> ChatHandler:
 
 def get_players() -> List[character.Character]:
     global _manager
-    return list(_manager.sync.players.values())
+    return list(_manager.sync.players)
 
 
 def set_sync_data(packet_: packet.Packet):
@@ -148,12 +226,9 @@ def set_sync_data(packet_: packet.Packet):
     assert type(packet_.data) is _SyncableData, f'Wrong type of data for set_sync_data. Got {type(packet_.data)}'
 
     old_sync = _manager.sync
+    my_player = get_player(get_my_player_name())
     _manager.sync = packet_.data
-    my_player = get_my_player_name()
-
-    if my_player not in _manager.sync.players:
-        # set the player back if it wasn't overwritten by the synced data
-        _manager.sync.players[my_player] = old_sync.players[my_player]
+    set_my_player(my_player)
 
     _manager.update_handler(_manager.chat_update_handlers, packet_)
     _manager.update_handler(_manager.character_update_handlers, packet_)

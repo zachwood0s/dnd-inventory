@@ -114,6 +114,15 @@ def roll3_command(command: List[str]):
     resourceManager.add_chat_message(pkt)
 
 
+def _update_player_and_chat(command, msg, player):
+    origin_command = ' '.join(command)
+    me = resourceManager.get_my_player_name()
+    chat_pkt = make_chat_packet([msg], me, origin_command)
+    character_pkt = make_character_packet(player, me, origin_command)
+    resourceManager.set_player(character_pkt)
+    resourceManager.add_chat_message(chat_pkt)
+
+
 @commandHandler.register_command('set', n_args=3, help_text='set <player> <trait> <value>')
 def set_command(command: List[str]):
     (_, name, stat, value,) = command
@@ -122,17 +131,104 @@ def set_command(command: List[str]):
     player.set_stat(stat, value)
 
     msg = f"Changed {player.get_stat(character.NAME)}'s {stat} from {old_value} to {value}"
-    me = resourceManager.get_my_player_name()
-    origin_command = ' '.join(command)
-    chat_pkt = make_chat_packet([msg], me, origin_command)
-    character_pkt = make_character_packet(player, me, origin_command)
+    if stat == character.NAME:
+        if old_value == resourceManager.get_my_player_name():
+            resourceManager.set_my_player(player)
+        else:
+            raise ValueError("Can't change the name of another character")
+    _update_player_and_chat(command, msg, player)
 
-    resourceManager.set_player(character_pkt)
-    resourceManager.add_chat_message(chat_pkt)
+
+@commandHandler.register_command('give', n_args=2, help_text='give <player> <item_id>')
+def give_command(command: List[str]):
+    (_, name, item_id) = command
+    player = resourceManager.get_player(name)
+    if resourceManager.has_item(item_id):
+        player.items.append(item_id)
+    else:
+        print("no no no item not exist")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has received {item_id}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('take', n_args=2, help_text='take <player> <item_id>')
+def take_command(command: List[str]):
+    (_, name, item_id) = command
+    player = resourceManager.get_player(name)
+    if item_id in player.items:
+        player.items.remove(item_id)
+    else:
+        print("no no no item not exist in player")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has lost {item_id}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('learn', n_args=2, help_text='learn <player> <ability_id>')
+def learn_command(command: List[str]):
+    (_, name, ability_id) = command
+    player = resourceManager.get_player(name)
+    if resourceManager.has_ability(ability_id):
+        player.abilities.append(ability_id)
+    else:
+        print("no no no ability not exist")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has learned {ability_id}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('forget', n_args=2, help_text='forget <player> <ability_id>')
+def forget_command(command: List[str]):
+    (_, name, ability_id) = command
+    player = resourceManager.get_player(name)
+    if ability_id in player.abilities:
+        player.abilities.remove(ability_id)
+    else:
+        print("no no no ability not exist in player")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has forgotten {ability_id}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('effect', n_args=2, help_text='effect <player> <effect_id>')
+def effect_command(command: List[str]):
+    (_, name, effect_id) = command
+    player = resourceManager.get_player(name)
+    if resourceManager.has_effect(effect_id):
+        player.effects.append(effect_id)
+    else:
+        print("no no no effect not exist")
+        print(resourceManager._manager.sync.campaign_db.effects)
+        print(effect_id)
+        return
+
+    msg = f"{player.get_stat(character.NAME)} is now effected by {effect_id}"
+    _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('remedy', n_args=2, help_text='remedy <player> <effect_id>')
+def remedy_command(command: List[str]):
+    (_, name, effect_id) = command
+    player = resourceManager.get_player(name)
+    if effect_id in player.effects:
+        player.effects.remove(effect_id)
+        print(player.effects)
+    else:
+        print("no no no effect not exist in player")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} is no longer effected by {effect_id}"
+    _update_player_and_chat(command, msg, player)
 
 
 _DEFAULT_DATA_DIRECTORY = 'data'
 _DEFAULT_CHARACTER_PATH = 'character.hjson'
+_DEFAULT_CAMPAIGN_DB_PATH = 'campaign.hjson'
 
 
 class ObjDecoder(hjson.HjsonDecoder):
@@ -159,10 +255,17 @@ class Encoder(hjson.HjsonEncoder):
 
 @commandHandler.register_command('save', n_args=0, help_text='save')
 def save_command(command_: List[str]):
+    # Write character
     p = pathlib.Path('./' + _DEFAULT_DATA_DIRECTORY) / _DEFAULT_CHARACTER_PATH
     with p.open(mode='w') as f:
         player = resourceManager.get_player(resourceManager.get_my_player_name())
         hjson.dump(player, f, cls=Encoder)
+
+    # Write Campaign
+    p = pathlib.Path('./' + _DEFAULT_DATA_DIRECTORY) / _DEFAULT_CAMPAIGN_DB_PATH
+    with p.open(mode='w') as f:
+        campaign = resourceManager.get_campaign_db()
+        hjson.dump(campaign, f, cls=Encoder)
 
 
 @commandHandler.register_command('load', n_args=1, help_text='load <data_file>')
@@ -172,10 +275,5 @@ def load_command(command: List[str]):
     p = pathlib.Path('./') / _DEFAULT_DATA_DIRECTORY / (file_name + '.hjson')
     with p.open(mode='r') as f:
         data = hjson.load(f, cls=ObjDecoder)
-
-        if type(data) is character.Character:
-            data: character.Character
-            origin_command = ' '.join(command)
-            pkt = make_character_packet(data, resourceManager.get_my_player_name(), origin_command)
-            resourceManager.set_player(pkt)
+        resourceManager.load_data(data, ' '.join(command))
 
