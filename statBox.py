@@ -1,4 +1,6 @@
 import npyscreen
+import curses
+import math
 import typing
 import character
 import resourceManager
@@ -17,6 +19,18 @@ class StatGrid(npyscreen.GridColTitles):
         self.column_percents = column_percents
         super().__init__(screen, **kwargs)
         assert column_percents is not None, "column_widths cannot be none"
+
+    def display(self):
+        if hasattr(self.parent_widget, 'update_footer'):
+            self.parent_widget.update_footer()
+            self.parent_widget.display()
+
+        super().display()
+
+    def page_information(self):
+        per_page = len(self._my_widgets)
+        current_page = self.begin_row_display_at // per_page + 1
+        return per_page, current_page
 
     def make_contained_widgets(self):
 
@@ -49,11 +63,26 @@ class StatGrid(npyscreen.GridColTitles):
                 cur_pos += w + self.col_margin
             self._my_widgets.append(row)
 
+    def set_up_handlers(self):
+        super().set_up_handlers()
+        self.handlers.update({
+            curses.KEY_ENTER: self.enter_command,
+            curses.ascii.NL: self.enter_command,
+            curses.ascii.CR: self.enter_command,
+        })
+
+    def enter_command(self, event_):
+        import logEntry
+        idx = self.edit_cell[0]
+        id = self.parent_widget.ids[idx]
+        logEntry.LogEntry(id).edit()
+
 
 class StatGridBox(npyscreen.BoxTitle):
     _contained_widget = StatGrid
 
     def create(self, row_finder_function: typing.Callable[[], typing.List[str]]):
+        self.ids = []
         self.rows = []
         self.row_finder_function = row_finder_function
         self.entry_widget.select_whole_line = True
@@ -72,6 +101,16 @@ class StatGridBox(npyscreen.BoxTitle):
 
         self.display()
 
+    def display(self):
+        self.update_footer()
+        super().display()
+
+    def update_footer(self):
+        per_page, current_page = self.entry_widget.page_information()
+        page_count = math.ceil(len(self.rows) / per_page)
+        self.footer = f'<Page {current_page}/{page_count}>'
+
+
     def display_effects(self, effects: typing.List[str]):
         self.entry_widget.columns_requested = 2
         self.entry_widget.columns = 2
@@ -80,6 +119,8 @@ class StatGridBox(npyscreen.BoxTitle):
         rows = [[eff.name, _str_effect_traits(eff.traits)] for eff in map(resourceManager.get_effect, effects)]
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles
+        self.rows = rows
+        self.ids = effects
 
     def display_items(self, items: typing.List[str]):
         self.entry_widget.columns_requested = 4
@@ -95,6 +136,8 @@ class StatGridBox(npyscreen.BoxTitle):
 
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles
+        self.rows = rows
+        self.ids = items
 
 
 def _str_item_traits(effects: typing.List[character.Effect]):

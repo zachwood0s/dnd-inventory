@@ -8,10 +8,9 @@ import statBox
 import character
 import commandHandler
 import resourceManager
+import logEntry
+from settings import MAX_HEIGHT, MAX_WIDTH
 import commands
-
-MAX_WIDTH = 210
-MAX_HEIGHT = 60
 
 
 class MainForm(npyscreen.FormBaseNew):
@@ -106,7 +105,7 @@ class MainForm(npyscreen.FormBaseNew):
 
         # ABILITIES
         grid_args = {'column_percents': []}
-        self.abilitiesObj = self.add(statBox.StatGridBox, name='Abilities', max_width=remaining_width - 2 * item_padding,
+        self.abilitiesObj = self.add(statBox.StatGridBox, name='Weapons & Abilities', max_width=remaining_width - 2 * item_padding,
                                      contained_widget_arguments=grid_args)
         self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).abilities)
         self.abilitiesObj.update_rows(None)

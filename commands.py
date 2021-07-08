@@ -11,6 +11,7 @@ import utils
 import character
 
 from packet import MessageType, make_character_packet, make_chat_packet
+from settings import DEFAULT_CAMPAIGN_DB_PATH, DEFAULT_CHARACTER_PATH, DEFAULT_DATA_DIRECTORY
 
 _DICE_REGEX = re.compile('([0-9]*)d([0-9]+)([+-]?)')
 
@@ -274,11 +275,6 @@ def remedy_command(command: List[str]):
 # endregion
 
 
-_DEFAULT_DATA_DIRECTORY = 'data'
-_DEFAULT_CHARACTER_PATH = 'character.hjson'
-_DEFAULT_CAMPAIGN_DB_PATH = 'campaign.hjson'
-
-
 class ObjDecoder(hjson.HjsonDecoder):
     def __init__(self, *args, **kwargs):
         del kwargs['object_pairs_hook']
@@ -304,13 +300,13 @@ class Encoder(hjson.HjsonEncoder):
 @commandHandler.register_command('save', n_args=0, help_text='save')
 def save_command(command_: List[str]):
     # Write character
-    p = pathlib.Path('./' + _DEFAULT_DATA_DIRECTORY) / _DEFAULT_CHARACTER_PATH
+    p = pathlib.Path('./' + DEFAULT_DATA_DIRECTORY) / DEFAULT_CHARACTER_PATH
     with p.open(mode='w') as f:
         player = resourceManager.get_player(resourceManager.get_my_player_name())
         hjson.dump(player, f, cls=Encoder)
 
     # Write Campaign
-    p = pathlib.Path('./' + _DEFAULT_DATA_DIRECTORY) / _DEFAULT_CAMPAIGN_DB_PATH
+    p = pathlib.Path('./' + DEFAULT_DATA_DIRECTORY) / DEFAULT_CAMPAIGN_DB_PATH
     with p.open(mode='w') as f:
         campaign = resourceManager.get_campaign_db()
         hjson.dump(campaign, f, cls=Encoder)
@@ -320,7 +316,7 @@ def save_command(command_: List[str]):
 def load_command(command: List[str]):
     (_, file_name) = command
 
-    p = pathlib.Path('./') / _DEFAULT_DATA_DIRECTORY / (file_name + '.hjson')
+    p = pathlib.Path('./') / DEFAULT_DATA_DIRECTORY / (file_name + '.hjson')
     with p.open(mode='r') as f:
         data = hjson.load(f, cls=ObjDecoder)
         resourceManager.load_data(data, ' '.join(command))

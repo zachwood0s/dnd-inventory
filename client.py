@@ -1,6 +1,7 @@
 from twisted.internet.protocol import Protocol, ClientFactory, ReconnectingClientFactory
 from twisted.internet import reactor
 from sys import stdout
+from os import system
 
 import argparse
 
@@ -11,6 +12,7 @@ import pickle
 import ui
 import packet
 import resourceManager
+import settings
 
 
 class DNDClient(Protocol):
@@ -71,6 +73,8 @@ if __name__ == '__main__':
     parser.add_argument('port', type=int)
 
     args = parser.parse_args()
+
+    system(f'mode con: cols={settings.MAX_WIDTH} lines={settings.MAX_HEIGHT}')
 
     app = ui.App()
 
