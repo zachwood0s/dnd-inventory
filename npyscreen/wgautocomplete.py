@@ -17,11 +17,12 @@ class Autocomplete(textbox.Textfield):
     def auto_complete(self, input):
         curses.beep()
 
-    def get_choice(self, values):
+    def get_choice(self, values, x=Popup.Popup.SHOW_ATX, y=Popup.Popup.SHOW_ATY,
+                   lines=Popup.Popup.DEFAULT_LINES, columns=Popup.Popup.DEFAULT_COLUMNS):
         # If auto_complete needs the user to select from a list of values, this function lets them do that.
         
         #tmp_window = Form.TitleForm(name=self.name, framed=True)
-        tmp_window = Popup.Popup(name=self.name, framed=True)
+        tmp_window = Popup.Popup(name=self.name, framed=True, show_atx=x, show_aty=y, lines=lines, columns=columns)
         sel = tmp_window.add_widget(multiline.MultiLine, 
                 values=values, 
                 value=self.value,

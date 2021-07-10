@@ -22,6 +22,7 @@ def register_command(cmd_name: str, n_args: int, help_text: str):
 
 def parse_command(input_str: str):
     print(f'Received command {input_str}')
+    input_str = input_str.strip()
     command = input_str.split(' ')
 
     commands = _REGISTERED_COMMANDS.get(command[0].lower())

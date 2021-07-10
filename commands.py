@@ -15,6 +15,17 @@ from settings import DEFAULT_CAMPAIGN_DB_PATH, DEFAULT_CHARACTER_PATH, DEFAULT_D
 
 _DICE_REGEX = re.compile('([0-9]*)d([0-9]+)([+-]?)')
 
+DICE_FMT = '<dice_fmt>'
+PLAYER = '<player>'
+TRAIT = '<trait>'
+ITEM_ID = '<item_id>'
+PLAYERS_ITEM = '<players_item>'
+ABILITY_ID = '<ability_id>'
+PLAYERS_ABILITY = '<players_ability>'
+EFFECT_ID = '<effect_id>'
+PLAYERS_EFFECT = '<players_effect>'
+VALUE = '<value>'
+
 
 def parse_dice_amt(input_: str):
     res = _DICE_REGEX.match(input_)
@@ -65,23 +76,11 @@ def adv_str(adv: int):
         return ''
 
 
-@commandHandler.register_command('roll', n_args=1, help_text='roll <dice_fmt>')
+@commandHandler.register_command('roll', n_args=1, help_text=f'roll {TRAIT}')
 def roll2_command(command: List[str]):
-    (_, dice_fmt) = command
-    roll_amt, dice, adv = parse_dice_amt(dice_fmt)
-    total, roll1, roll2 = perform_rolls(roll_amt, dice, adv)
-    msg = [f'Rolling {dice_fmt}:', roll1]
-    if adv:
-        msg.extend([roll2, f'= {adv_str(adv)} {total}'])
-
-    origin_command = ' '.join(command)
-    pkt = make_chat_packet(msg, resourceManager.get_my_player_name(), origin_command)
-    resourceManager.add_chat_message(pkt)
-
-
-@commandHandler.register_command('roll', n_args=2, help_text='roll <player> <trait>')
-def roll2_command(command: List[str]):
-    (_, player, trait) = command
+    (_, trait) = command
+    player = resourceManager.get_player(resourceManager.ME)
+    # handle 'roll dex' style commands
     if trait[-1] == '+':
         adv = '+'
         trait = trait[:-1:]
@@ -90,11 +89,26 @@ def roll2_command(command: List[str]):
         trait = trait[:-1:]
     else:
         adv = ''
-    new_command = [command[0], f'd20{adv}', player, trait]
-    roll3_command(new_command)
+
+    if trait in player.get_stat_names():
+        new_command = [command[0], f'd20{adv}', resourceManager.ME, trait]
+        roll3_command(new_command)
+
+    else:
+        # handle 'roll d20' style commands
+        (_, dice_fmt) = command
+        roll_amt, dice, adv = parse_dice_amt(dice_fmt)
+        total, roll1, roll2 = perform_rolls(roll_amt, dice, adv)
+        msg = [f'Rolling {dice_fmt}:', roll1]
+        if adv:
+            msg.extend([roll2, f'= {adv_str(adv)} {total}'])
+
+        origin_command = ' '.join(command)
+        pkt = make_chat_packet(msg, resourceManager.get_my_player_name(), origin_command)
+        resourceManager.add_chat_message(pkt)
 
 
-@commandHandler.register_command('roll', n_args=3, help_text='roll <dice_fmt> <player> <trait>')
+@commandHandler.register_command('roll', n_args=3, help_text=f'roll {DICE_FMT} {PLAYER} {TRAIT}')
 def roll3_command(command: List[str]):
     (_, dice_fmt, player, trait) = command
     p = resourceManager.get_player(player)
@@ -102,7 +116,7 @@ def roll3_command(command: List[str]):
     roll_amt, dice, adv = parse_dice_amt(dice_fmt)
     total, roll1, roll2 = perform_rolls(roll_amt, dice, adv)
     overall_total = total + stat
-    msg = [f"Rolling {dice_fmt} on {player}'s {trait}:", roll1]
+    msg = [f"Rolling {dice_fmt} on {p.get_stat(character.NAME)}'s {trait}:", roll1]
     if adv:
         msg.extend([roll2, f'= {adv_str(adv)} {total} + ({trait}) {stat} '])
     else:
@@ -124,7 +138,7 @@ def _update_player_and_chat(command, msg, player):
     resourceManager.add_chat_message(chat_pkt)
 
 
-@commandHandler.register_command('set', n_args=3, help_text='set <player> <trait> <value>')
+@commandHandler.register_command('set', n_args=3, help_text=f'set {PLAYER} {TRAIT} {VALUE}')
 def set_command(command: List[str]):
     (_, name, stat, value,) = command
     player = resourceManager.get_player(name)
@@ -141,7 +155,7 @@ def set_command(command: List[str]):
 
 
 # region Item Commands
-@commandHandler.register_command('give+', n_args=2, help_text='give+ <player> <item_id>')
+@commandHandler.register_command('give', n_args=2, help_text=f'give {PLAYER} {ITEM_ID}')
 def give_command(command: List[str]):
     (_, name, item_id) = command
     player = resourceManager.get_player(name)
@@ -161,27 +175,7 @@ def give_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('give', n_args=2, help_text='give <player> <item_id>')
-def give_command(command: List[str]):
-    (_, name, item_id) = command
-    player = resourceManager.get_player(name)
-    if resourceManager.has_item(item_id):
-        if item_id in player.item_qtys:
-            # The player already has one, increase the qty
-            player.item_qtys[item_id] += 1
-        else:
-            # Need to add the item to the player
-            player.items.append(item_id)
-            player.item_qtys[item_id] = 1
-    else:
-        print("no no no item not exist")
-        return
-
-    msg = f"{player.get_stat(character.NAME)} has received {resourceManager.get_item(item_id).name}"
-    _update_player_and_chat(command, msg, player)
-
-
-@commandHandler.register_command('take', n_args=2, help_text='take <player> <item_id>')
+@commandHandler.register_command('take', n_args=2, help_text=f'take {PLAYER} {PLAYERS_ITEM}')
 def take_command(command: List[str]):
     (_, name, item_id) = command
     player = resourceManager.get_player(name)
@@ -203,7 +197,7 @@ def take_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('use', n_args=1, help_text='use <item_id>')
+@commandHandler.register_command('use', n_args=1, help_text=f'use {PLAYERS_ITEM}')
 def use_command(command: List[str]):
     (_, item_id) = command
     player = resourceManager.get_player(resourceManager.get_my_player_name())
@@ -217,7 +211,7 @@ def use_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('unuse', n_args=1, help_text='unuse <item_id>')
+@commandHandler.register_command('unuse', n_args=1, help_text=f'unuse {PLAYERS_ITEM}')
 def unuse_command(command: List[str]):
     (_, item_id) = command
     player = resourceManager.get_player(resourceManager.get_my_player_name())
@@ -235,7 +229,7 @@ def unuse_command(command: List[str]):
 # region Ability Commands
 
 
-@commandHandler.register_command('learn', n_args=2, help_text='learn <player> <ability_id>')
+@commandHandler.register_command('learn', n_args=2, help_text=f'learn {PLAYER} {ABILITY_ID}')
 def learn_command(command: List[str]):
     (_, name, ability_id) = command
     player = resourceManager.get_player(name)
@@ -249,7 +243,7 @@ def learn_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('forget', n_args=2, help_text='forget <player> <ability_id>')
+@commandHandler.register_command('forget', n_args=2, help_text=f'forget {PLAYER} {PLAYERS_ABILITY}')
 def forget_command(command: List[str]):
     (_, name, ability_id) = command
     player = resourceManager.get_player(name)
@@ -266,7 +260,7 @@ def forget_command(command: List[str]):
 # region Effect Commands
 
 
-@commandHandler.register_command('effect', n_args=2, help_text='effect <player> <effect_id>')
+@commandHandler.register_command('effect', n_args=2, help_text=f'effect {PLAYER} {EFFECT_ID}')
 def effect_command(command: List[str]):
     (_, name, effect_id) = command
     player = resourceManager.get_player(name)
@@ -282,7 +276,7 @@ def effect_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('remedy', n_args=2, help_text='remedy <player> <effect_id>')
+@commandHandler.register_command('remedy', n_args=2, help_text=f'remedy {PLAYER} {PLAYERS_EFFECT}')
 def remedy_command(command: List[str]):
     (_, name, effect_id) = command
     player = resourceManager.get_player(name)
@@ -297,7 +291,7 @@ def remedy_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('show', n_args=2, help_text='show <player> <effect_id>')
+@commandHandler.register_command('show', n_args=2, help_text=f'show {PLAYER} {EFFECT_ID}')
 def remedy_command(command: List[str]):
     (_, name, id_) = command
 

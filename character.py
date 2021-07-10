@@ -144,6 +144,12 @@ class Character:
         all_abilities = itertools.chain(abilities, item_abilities)
         return list(all_abilities)
 
+    def get_stat_names(self) -> List[str]:
+        names = list(self.battle_stats.keys())
+        names.extend(self.person_stats.keys())
+        names.extend(self.other_traits.keys())
+        return names
+
     def raw_stat(self, name) -> Union[int, str]:
         if name in self.battle_stats:
             return self.battle_stats[name]

@@ -86,12 +86,20 @@ def get_ability(ability_id: str) -> character.Ability:
     return _manager.sync.campaign_db.abilities[ability_id]
 
 
+def get_abilities() -> Dict[str, character.Ability]:
+    return _manager.sync.campaign_db.abilities
+
+
 def has_item(item_id: str) -> bool:
     return item_id in _manager.sync.campaign_db.items
 
 
 def get_item(item_id: str) -> character.Item:
     return _manager.sync.campaign_db.items[item_id]
+
+
+def get_items() -> Dict[str, character.Item]:
+    return _manager.sync.campaign_db.items
 
 
 def has_effect(effect_id: str) -> bool:
@@ -104,6 +112,10 @@ def get_effect(effect_id: str) -> character.Effect:
     if effect_id == character.hidden_effect_id:
         return character.hidden_effect
     return _manager.sync.campaign_db.effects[effect_id]
+
+
+def get_effects() -> Dict[str, character.Effect]:
+    return _manager.sync.campaign_db.effects
 
 
 def load_data(data, command: str):
@@ -124,6 +136,7 @@ def load_character():
 
     commandHandler.parse_command('load campaign')
     commandHandler.parse_command('load character')
+
 
 
 def get_player(name: str) -> character.Character:
@@ -221,7 +234,7 @@ def add_chat_update_handler(handler: ChatHandler) -> ChatHandler:
 
 def get_players() -> List[character.Character]:
     global _manager
-    return list(_manager.sync.players)
+    return [p for p in _manager.sync.players if p is not character.DEFAULT_CHARACTER]
 
 
 def set_sync_data(packet_: packet.Packet):
