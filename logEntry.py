@@ -3,6 +3,8 @@ import settings
 import character
 import resourceManager
 import statBox
+import textwrap
+from utils import columns
 
 
 class TraitGrid(npyscreen.BoxTitle):
@@ -27,31 +29,35 @@ class LogEntry(npyscreen.Popup):
         elif resourceManager.has_effect(self.log_item):
             self.create_effect(resourceManager.get_effect(self.log_item))
         elif resourceManager.has_ability(self.log_item):
-            pass
+            self.create_ability(resourceManager.get_ability(self.log_item))
 
     def create_item(self, item: character.Item):
+        y, x = self.useable_space()
         self.name_obj = self.add(npyscreen.BoxTitle, editable=False, name="Name", values=[item.name],
                                  max_height=4, footer=f"ID: {self.log_item}")
-        self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=item.desc.splitlines(),
+        desc_lines = [s for line in textwrap.wrap(item.desc, self.name_obj.width - 10) for s in line.splitlines()]
+        self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
                                  max_height=8)
 
         grid_args = {'column_percents': []}
         self.actives_obj = self.add(statBox.StatGridBox, name='Actives', max_height=10,
                                     contained_widget_arguments=grid_args)
-        self.actives_obj.create(lambda: item.actives)
+        self.actives_obj.create(character.active_selector(item), 'effects')
         self.actives_obj.update_rows(None)
         self.actives_obj.resize()
 
         self.passives_obj = self.add(statBox.StatGridBox, name='Passives', max_height=10,
                                      contained_widget_arguments=grid_args)
-        self.passives_obj.create(lambda: item.passives)
+        self.passives_obj.create(lambda: item.passives, 'effects')
         self.passives_obj.update_rows(None)
         self.passives_obj.resize()
 
     def create_effect(self, effect: character.Effect):
+        y, x = self.useable_space()
         self.name_obj = self.add(npyscreen.BoxTitle, editable=False, name="Name", values=[effect.name],
                                  max_height=4, footer=f"ID: {self.log_item}")
-        self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=effect.desc.splitlines(),
+        desc_lines = [s for line in textwrap.wrap(effect.desc, self.name_obj.width - 10) for s in line.splitlines()]
+        self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
                                  max_height=8)
 
         grid_args = {'col_titles': ['Trait', 'Value'],
@@ -65,3 +71,35 @@ class LogEntry(npyscreen.Popup):
             self.traits_obj.entry_widget.values.append([t.name, f'{front}{t.amt}'])
 
         self.traits_obj.resize()
+
+    def create_ability(self, ability: character.Ability):
+        y, x = self.useable_space()
+        self.name_obj = self.add(npyscreen.BoxTitle, editable=False, name="Name", values=[ability.name],
+                                 max_height=4, footer=f"ID: {self.log_item}")
+        desc_lines = [s for line in textwrap.wrap(ability.desc, self.name_obj.width - 10) for s in line.splitlines()]
+        self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
+                                 max_height=8)
+
+        self.statObjs = {}
+        stat_padding = 3
+        stat_width, stat_xs = columns(x, len(ability.stats), stat_padding)
+        stat_y = 14
+        stat_height = 4
+        for idx, (stat, val) in enumerate(ability.stats.items()):
+            word = ' '.join(map(str.capitalize, stat.split('_')))
+            self.statObjs[stat] = self.add(statBox.StatBox, name=word, values=[str(val)], color='VERYGOOD',
+                                           editable=False,
+                                           max_width=stat_width, max_height=stat_height, relx=stat_xs[idx], rely=stat_y)
+
+        grid_args = {'column_percents': []}
+        self.actives_obj = self.add(statBox.StatGridBox, name='Actives', max_height=10,
+                                    contained_widget_arguments=grid_args)
+        self.actives_obj.create(lambda: ability.actives, 'effects')
+        self.actives_obj.update_rows(None)
+        self.actives_obj.resize()
+
+        self.passives_obj = self.add(statBox.StatGridBox, name='Passives', max_height=10,
+                                     contained_widget_arguments=grid_args)
+        self.passives_obj.create(lambda: ability.passives, 'effects')
+        self.passives_obj.update_rows(None)
+        self.passives_obj.resize()

@@ -75,6 +75,8 @@ def set_campaign_db(db: CampaignDB):
     for h in _manager.character_update_handlers:
         h(None)
 
+    handle_sync_request(None)
+
 
 def has_ability(ability_id: str) -> bool:
     return ability_id in _manager.sync.campaign_db.abilities
@@ -93,10 +95,14 @@ def get_item(item_id: str) -> character.Item:
 
 
 def has_effect(effect_id: str) -> bool:
+    if effect_id == character.hidden_effect_id:
+        return True
     return effect_id in _manager.sync.campaign_db.effects
 
 
 def get_effect(effect_id: str) -> character.Effect:
+    if effect_id == character.hidden_effect_id:
+        return character.hidden_effect
     return _manager.sync.campaign_db.effects[effect_id]
 
 
@@ -239,13 +245,25 @@ def handle_sync_request(packet_: packet.Packet, origin_command=''):
     _manager.update_handler(_manager.general_msg_handlers, pkt)
 
 
+def send_general_packet(packet_: packet.Packet):
+    _manager.update_handler(_manager.general_msg_handlers, packet_)
+
+
+def show_data(packet_: packet.Packet):
+    import logEntry
+    data = packet_.data
+    if has_item(data) or has_ability(data) or has_effect(data):
+        logEntry.LogEntry(data).edit()
+
+
 incoming_lock = threading.Lock()
 
 _PKT_HANDLERS = {
     packet.MessageType.Message: partial(add_chat_message, send_msg=False),
     packet.MessageType.UpdateCharacter: partial(set_player, send_msg=False),
     packet.MessageType.SyncDataRequest: handle_sync_request,
-    packet.MessageType.SyncDataResponse: set_sync_data
+    packet.MessageType.SyncDataResponse: set_sync_data,
+    packet.MessageType.ShowRequest: show_data,
 }
 
 

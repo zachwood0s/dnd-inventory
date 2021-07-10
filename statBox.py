@@ -74,29 +74,32 @@ class StatGrid(npyscreen.GridColTitles):
     def enter_command(self, event_):
         import logEntry
         idx = self.edit_cell[0]
-        id = self.parent_widget.ids[idx]
-        logEntry.LogEntry(id).edit()
+        if idx < len(self.parent_widget.ids):
+            id = self.parent_widget.ids[idx]
+            logEntry.LogEntry(id).edit()
 
 
 class StatGridBox(npyscreen.BoxTitle):
     _contained_widget = StatGrid
 
-    def create(self, row_finder_function: typing.Callable[[], typing.List[str]]):
+    def create(self, row_finder_function: typing.Callable[[], typing.List[str]], obj_type: str):
         self.ids = []
         self.rows = []
         self.row_finder_function = row_finder_function
         self.entry_widget.select_whole_line = True
+        self.entry_widget.values = []
+        self.obj_type = obj_type
 
     def update_rows(self, packet_):
         new_rows = self.row_finder_function()
 
         if len(new_rows) == 0:
             self.entry_widget.values = []
-        elif resourceManager.has_item(new_rows[0]):
+        if self.obj_type == 'items':
             self.display_items(new_rows)
-        elif resourceManager.has_ability(new_rows[0]):
-            pass
-        elif resourceManager.has_effect(new_rows[0]):
+        elif self.obj_type == 'abilities':
+            self.display_abilities(new_rows)
+        elif self.obj_type == 'effects':
             self.display_effects(new_rows)
 
         self.display()
@@ -109,7 +112,6 @@ class StatGridBox(npyscreen.BoxTitle):
         per_page, current_page = self.entry_widget.page_information()
         page_count = math.ceil(len(self.rows) / per_page)
         self.footer = f'<Page {current_page}/{page_count}>'
-
 
     def display_effects(self, effects: typing.List[str]):
         self.entry_widget.columns_requested = 2
@@ -132,15 +134,36 @@ class StatGridBox(npyscreen.BoxTitle):
         for item in items:
             i = resourceManager.get_item(item)
             front = '(Using) ' if item in me.active_items else ''
-            rows.append([front + i.name, _str_item_traits(i.passives), _str_item_traits(i.actives), me.item_qtys[item]])
+            rows.append([front + i.name, _str_item_traits(i.passives),
+                         _str_item_traits(character.active_selector(i)()), me.item_qtys[item]])
 
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles
         self.rows = rows
         self.ids = items
 
+    def display_abilities(self, abilities: typing.List[str]):
+        self.entry_widget.columns_requested = 7
+        self.entry_widget.columns = 7
+        col_titles = ['Name', 'Range', 'To Hit', 'Dice', 'Type', 'Passives', 'Actives']
+        self.entry_widget.column_percents = [2, 1, 1, 1, 1, 2, 2]
 
-def _str_item_traits(effects: typing.List[character.Effect]):
+        rows = [[eff.name, eff.stats[character.RANGE], eff.stats[character.TO_HIT],
+                 eff.stats[character.DICE], eff.stats[character.DAMAGE_TYPE], _str_ability_traits(eff.passives),
+                 _str_ability_traits(eff.actives)]
+                for eff in map(resourceManager.get_ability, abilities)]
+
+        self.entry_widget.values = rows
+        self.entry_widget.col_titles = col_titles
+        self.rows = rows
+        self.ids = abilities
+
+
+def _str_ability_traits(effects: typing.List[str]):
+    return ''.join(_str_effect_traits(resourceManager.get_effect(e).traits) for e in effects)
+
+
+def _str_item_traits(effects: typing.List[str]):
     return ''.join(_str_effect_traits(resourceManager.get_effect(e).traits) for e in effects)
 
 

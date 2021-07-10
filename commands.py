@@ -141,6 +141,26 @@ def set_command(command: List[str]):
 
 
 # region Item Commands
+@commandHandler.register_command('give+', n_args=2, help_text='give+ <player> <item_id>')
+def give_command(command: List[str]):
+    (_, name, item_id) = command
+    player = resourceManager.get_player(name)
+    if resourceManager.has_item(item_id):
+        if item_id in player.item_qtys:
+            # The player already has one, increase the qty
+            player.item_qtys[item_id] += 1
+        else:
+            # Need to add the item to the player
+            player.items.append(item_id)
+            player.item_qtys[item_id] = 1
+    else:
+        print("no no no item not exist")
+        return
+
+    msg = f"{player.get_stat(character.NAME)} has received {resourceManager.get_item(item_id).name}"
+    _update_player_and_chat(command, msg, player)
+
+
 @commandHandler.register_command('give', n_args=2, help_text='give <player> <item_id>')
 def give_command(command: List[str]):
     (_, name, item_id) = command
@@ -173,6 +193,8 @@ def take_command(command: List[str]):
             # Otherwise we need to completely remove the item
             player.items.remove(item_id)
             del player.item_qtys[item_id]
+            if item_id in  player.active_items:
+                player.active_items.remove(item_id)
     else:
         print("no no no item not exist in player")
         return
@@ -211,6 +233,8 @@ def unuse_command(command: List[str]):
 # endregion
 
 # region Ability Commands
+
+
 @commandHandler.register_command('learn', n_args=2, help_text='learn <player> <ability_id>')
 def learn_command(command: List[str]):
     (_, name, ability_id) = command
@@ -271,6 +295,27 @@ def remedy_command(command: List[str]):
 
     msg = f"{player.get_stat(character.NAME)} is no longer effected by {resourceManager.get_effect(effect_id).name}"
     _update_player_and_chat(command, msg, player)
+
+
+@commandHandler.register_command('show', n_args=2, help_text='show <player> <effect_id>')
+def remedy_command(command: List[str]):
+    (_, name, id_) = command
+
+    if name.lower() == 'all':
+        print('hi')
+        recv = None
+    else:
+        print('by')
+        player = resourceManager.get_player(name)
+        recv = player.get_stat(character.NAME)
+
+    origin_command = ' '.join(command)
+
+    p = packet.make_show_request_packet(resourceManager.get_my_player_name(), recv, origin_command, id_)
+    resourceManager.send_general_packet(p)
+    if recv is None or recv == resourceManager.get_my_player_name():
+        resourceManager.show_data(p)
+
 
 # endregion
 

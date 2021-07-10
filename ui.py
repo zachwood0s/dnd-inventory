@@ -94,20 +94,20 @@ class MainForm(npyscreen.FormBaseNew):
         self.effects = self.add(statBox.StatGridBox, name='Effects', max_width=remaining_width - 2 * item_padding,
                                 max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
 
-        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects())
+        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects(), 'effects')
         self.effects.update_rows(None)
 
         grid_args = {'column_percents': []}
         self.itemsObj = self.add(statBox.StatGridBox, name='Items', max_width=remaining_width - 2 * item_padding,
                                  max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
-        self.itemsObj.create(lambda: resourceManager.get_player(resourceManager.ME).items)
+        self.itemsObj.create(lambda: resourceManager.get_player(resourceManager.ME).items, 'items')
         self.itemsObj.update_rows(None)
 
         # ABILITIES
         grid_args = {'column_percents': []}
         self.abilitiesObj = self.add(statBox.StatGridBox, name='Weapons & Abilities', max_width=remaining_width - 2 * item_padding,
                                      contained_widget_arguments=grid_args)
-        self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).abilities)
+        self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).get_abilities(), 'abilities')
         self.abilitiesObj.update_rows(None)
 
         # init handlers
@@ -120,6 +120,7 @@ class MainForm(npyscreen.FormBaseNew):
         resourceManager.add_character_update_handler(self.character_update_handler)
         resourceManager.add_character_update_handler(self.effects.update_rows)
         resourceManager.add_character_update_handler(self.itemsObj.update_rows)
+        resourceManager.add_character_update_handler(self.abilitiesObj.update_rows)
         resourceManager.add_chat_update_handler(self.chat_update_handler)
         resourceManager.add_connected_update_handler(self.connected_update_handler)
         self.connected_update_handler(False)

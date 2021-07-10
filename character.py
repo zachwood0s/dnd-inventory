@@ -1,5 +1,6 @@
 from typing import Union, List, Dict
 from dataclasses import dataclass
+import dataclasses
 import itertools
 import resourceManager
 
@@ -77,21 +78,41 @@ class Effect:
 class Item:
     name: str
     desc: str
-    passives: List[Effect]
-    actives: List[Effect]
+    passives: List[str]
+    actives: List[str]
+    abilities: List[str]
+    hidden_actives: List[str]
 
 
-@dataclass
-class Weapon(Item):
-    range: str
-    damage: str
+RANGE = 'range'
+TO_HIT = 'to_hit'
+DICE = 'dice'
+DAMAGE_TYPE = 'damage_type'
+DEFAULT_WEAPON_STATS = {
+    RANGE: 0,
+    TO_HIT: 0,
+    DICE: 0,
+    DAMAGE_TYPE: ''
+}
+
+
+hidden_effect_id = '???'
+hidden_effect = Effect('???', '???', [EffectTrait('???', 1)])
+
+
+def active_selector(item):
+    def _selector():
+        return [a if a not in item.hidden_actives else hidden_effect_id for a in item.actives]
+    return _selector
 
 
 @dataclass
 class Ability:
     name: str
     desc: str
-    effects: List[Effect]
+    passives: List[str]
+    actives: List[str]
+    stats: dataclasses.field(default_factory=lambda: dict(DEFAULT_WEAPON_STATS))
 
 
 class Character:
@@ -110,10 +131,18 @@ class Character:
         passive_item_effects = (eff for item in self.items for eff in resourceManager.get_item(item).passives)
         active_item_effects = (eff for item in self.items
                                for eff in resourceManager.get_item(item).actives if item in self.active_items)
-        ability_effects = (eff for ability in self.abilities for eff in resourceManager.get_ability(ability).effects)
+        abilities = self.get_abilities()
+        ability_effects = (eff for ability in abilities for eff in resourceManager.get_ability(ability).passives)
         effects = iter(self.effects)
         all_effects = itertools.chain(effects, passive_item_effects, active_item_effects, ability_effects)
         return list(all_effects)
+
+    def get_abilities(self) -> List[str]:
+        abilities = iter(self.abilities)
+        item_abilities = (a for item in self.items
+                          for a in resourceManager.get_item(item).abilities if item in self.active_items)
+        all_abilities = itertools.chain(abilities, item_abilities)
+        return list(all_abilities)
 
     def raw_stat(self, name) -> Union[int, str]:
         if name in self.battle_stats:
@@ -124,7 +153,6 @@ class Character:
             return self.other_traits[name]
 
     def calc_stat(self, name):
-        # TODO: Handle stackable item effects
         stat = self.raw_stat(name)
         all_effects = self.get_effects()
         filtered_traits = [t for e in all_effects for t in resourceManager.get_effect(e).traits if t.name == name]
