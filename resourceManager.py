@@ -59,6 +59,7 @@ def get_is_connected() -> bool:
 
 
 def _normalize_name(name: str):
+    name = name.replace('_', ' ')
     global _manager
     if name == ME:
         name = _manager.my_player_name
