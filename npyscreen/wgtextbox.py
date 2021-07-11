@@ -358,7 +358,6 @@ class TextfieldBase(widget.Widget):
 
 class Textfield(TextfieldBase):
     def show_brief_message(self, message):
-        curses.beep()
         keep_for_a_moment = self.value
         self.value = message
         self.editing=False

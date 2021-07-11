@@ -126,9 +126,6 @@ class SelectOneTree(MultiLineTree):
     def h_set_filtered_to_selected(self, ch):
         if len(self._filtered_values_cache) < 2:
             self.value = self.get_filtered_values()
-        else:
-            # There is an error - trying to select too many things.
-            curses.beep()
 
 
 #####################################################################################

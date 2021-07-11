@@ -62,7 +62,6 @@ class _InputBoxInner(npyscreen.Autocomplete):
         new_value = ''
         if count == 0:
             # No possibilities
-            curses.beep()
             return
         elif count == 1:
             # found only one, change the value to the only option

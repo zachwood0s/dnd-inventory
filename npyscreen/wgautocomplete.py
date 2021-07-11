@@ -61,7 +61,6 @@ class Filename(Autocomplete):
 
             if len(possibilities) is 0:
                 # can't complete
-                curses.beep()
                 break
 
             if len(possibilities) is 1:
@@ -105,9 +104,6 @@ class Filename(Autocomplete):
             combined_list.insert(0, self.value)
             self.value = combined_list[self.get_choice(combined_list)]
             break
-
-            # Can't complete
-            curses.beep()
         #os.path.normpath(self.value)
         os.path.normcase(self.value)
         self.cursor_position=len(self.value)

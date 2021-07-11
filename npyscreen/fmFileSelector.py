@@ -50,7 +50,6 @@ class FileCommand(wgautocomplete.Filename):
 
         if len(possibilities) == 0:
             # can't complete
-            curses.beep()
             self.cursor_position = len(self.value)
 
         elif len(possibilities) == 1:
@@ -64,7 +63,6 @@ class FileCommand(wgautocomplete.Filename):
         elif len(possibilities) > 1:
             self.value = os.path.commonprefix(possibilities)
             self.cursor_position = len(self.value)
-            curses.beep()
             
         if os.path.isdir(self.value) and len(possibilities) < 2:
             self.parent.wMain.change_dir(self.value)

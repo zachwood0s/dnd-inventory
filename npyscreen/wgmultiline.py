@@ -571,9 +571,6 @@ object to be passed to the contained widget."""
         # This is broken on multiline
         if len(self._filtered_values_cache) < 2:
             self.value = self._filtered_values_cache
-        else:
-            # There is an error - trying to select too many things.
-            curses.beep()
 
     def h_select(self, ch):
         self.value = self.cursor_line
