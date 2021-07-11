@@ -1,5 +1,6 @@
 from typing import List, Callable, Dict
 from functools import partial
+import npyscreen
 import packet
 import character
 import threading
@@ -10,6 +11,7 @@ CharacterHandler = Callable[[packet.Packet], None]
 ChatHandler = Callable[[packet.Packet], None]
 MessageHandler = Callable[[packet.Packet], None]
 ConnectedHandler = Callable[[bool], None]
+EventHandler = Callable[[npyscreen.Event], None]
 
 
 class CampaignDB:
@@ -36,6 +38,7 @@ class _Manager:
         self.chat_update_handlers: List[ChatHandler] = []
         self.connected_handlers: List[ConnectedHandler] = []
         self.general_msg_handlers: List[MessageHandler] = []
+        self.event_handlers: List[EventHandler] = []
         self.connected = False
 
     def update_handler(self, handlers, msg):
@@ -228,6 +231,12 @@ def add_message_handler(handler: MessageHandler) -> MessageHandler:
     return handler
 
 
+def add_event_handler(handler: EventHandler) -> EventHandler:
+    global _manager
+    _manager.event_handlers.append(handler)
+    return handler
+
+
 def add_chat_message(packet_: packet.Packet, send_msg=True):
     global _manager
 
@@ -286,7 +295,7 @@ def show_data(packet_: packet.Packet):
     import logEntry
     data = packet_.data
     if has_item(data) or has_ability(data) or has_effect(data):
-        logEntry.LogEntry(data).edit()
+        _manager.update_handler(_manager.event_handlers, npyscreen.Event('TESTEVENT', data))
 
 
 incoming_lock = threading.Lock()

@@ -63,25 +63,25 @@ DEFAULT_CHARACTER_TRAITS = {
 
 @dataclass
 class EffectTrait:
-    name: str
-    amt: int
+    name: str = ''
+    amt: int = ''
 
 
 @dataclass
 class Effect:
-    name: str
-    desc: str
-    traits: List[EffectTrait]
+    name: str = ''
+    desc: str = ''
+    traits: List[EffectTrait] = dataclasses.field(default_factory=list)
 
 
 @dataclass
 class Item:
-    name: str
-    desc: str
-    passives: List[str]
-    actives: List[str]
-    abilities: List[str]
-    hidden_actives: List[str]
+    name: str = ''
+    desc: str = ''
+    passives: List[str] = dataclasses.field(default_factory=list)
+    actives: List[str] = dataclasses.field(default_factory=list)
+    abilities: List[str] = dataclasses.field(default_factory=list)
+    hidden_actives: List[str] = dataclasses.field(default_factory=list)
 
 
 RANGE = 'range'
@@ -89,10 +89,10 @@ TO_HIT = 'to_hit'
 DICE = 'dice'
 DAMAGE_TYPE = 'damage_type'
 DEFAULT_WEAPON_STATS = {
-    RANGE: 0,
-    TO_HIT: 0,
-    DICE: 0,
-    DAMAGE_TYPE: ''
+    RANGE: '---',
+    TO_HIT: '---',
+    DICE: '---',
+    DAMAGE_TYPE: '---'
 }
 
 
@@ -108,11 +108,11 @@ def active_selector(item):
 
 @dataclass
 class Ability:
-    name: str
-    desc: str
-    passives: List[str]
-    actives: List[str]
-    stats: dataclasses.field(default_factory=lambda: dict(DEFAULT_WEAPON_STATS))
+    name: str = ''
+    desc: str = ''
+    passives: List[str] = dataclasses.field(default_factory=list)
+    actives: List[str] = dataclasses.field(default_factory=list)
+    stats: Dict[str, str] = dataclasses.field(default_factory=lambda: dict(DEFAULT_WEAPON_STATS))
 
 
 class Character:

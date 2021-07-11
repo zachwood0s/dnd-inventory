@@ -153,7 +153,7 @@ class _InputBoxInner(npyscreen.Autocomplete):
     def auto_complete_player(words, command, part_word: str):
         players = [p.get_stat(character.NAME) for p in resourceManager.get_players()]
         players.append('me')
-        filtered = [name for name in players if name.startswith(part_word)]
+        filtered = [name.replace(' ', '_') for name in players if name.startswith(part_word)]
         return filtered
 
     def show_choices(self, possibilities):

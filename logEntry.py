@@ -16,6 +16,7 @@ class LogEntry(npyscreen.Popup):
     DEFAULT_COLUMNS = settings.POPUP_WIDTH
     SHOW_ATX = settings.POPUP_MARGIN_X
     SHOW_ATY = settings.POPUP_MARGIN_Y
+    DESC_HEIGHT = 12
 
     def __init__(self, log_item: str, **kwargs):
         self.log_item = log_item
@@ -37,7 +38,7 @@ class LogEntry(npyscreen.Popup):
                                  max_height=4, footer=f"ID: {self.log_item}")
         desc_lines = [s for line in textwrap.wrap(item.desc, self.name_obj.width - 10) for s in line.splitlines()]
         self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
-                                 max_height=8)
+                                 max_height=self.DESC_HEIGHT)
 
         grid_args = {'column_percents': []}
         self.actives_obj = self.add(statBox.StatGridBox, name='Actives', max_height=10,
@@ -58,7 +59,7 @@ class LogEntry(npyscreen.Popup):
                                  max_height=4, footer=f"ID: {self.log_item}")
         desc_lines = [s for line in textwrap.wrap(effect.desc, self.name_obj.width - 10) for s in line.splitlines()]
         self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
-                                 max_height=8)
+                                 max_height=self.DESC_HEIGHT)
 
         grid_args = {'col_titles': ['Trait', 'Value'],
                      'columns': 2,
@@ -78,12 +79,12 @@ class LogEntry(npyscreen.Popup):
                                  max_height=4, footer=f"ID: {self.log_item}")
         desc_lines = [s for line in textwrap.wrap(ability.desc, self.name_obj.width - 10) for s in line.splitlines()]
         self.desc_obj = self.add(npyscreen.BoxTitle, editable=False, name='Desc', values=desc_lines,
-                                 max_height=8)
+                                 max_height=self.DESC_HEIGHT)
 
         self.statObjs = {}
         stat_padding = 3
         stat_width, stat_xs = columns(x, len(ability.stats), stat_padding)
-        stat_y = 14
+        stat_y = 18
         stat_height = 4
         for idx, (stat, val) in enumerate(ability.stats.items()):
             word = ' '.join(map(str.capitalize, stat.split('_')))

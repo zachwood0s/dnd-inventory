@@ -144,6 +144,8 @@ def set_command(command: List[str]):
     (_, name, stat, value,) = command
     player = resourceManager.get_player(name)
     old_value = player.get_stat(stat)
+    if stat == character.NAME:
+        value = value.replace('_', ' ')
     player.set_stat(stat, value)
 
     msg = f"Changed {player.get_stat(character.NAME)}'s {stat} from {old_value} to {value}"
@@ -331,8 +333,8 @@ class ObjDecoder(hjson.HjsonDecoder):
     def object_hook(self, dct):
         if '__type__' in dct:
             cls = utils.import_string(dct['__type__'])
-            new_obj = cls.__new__(cls)
-            new_obj.__dict__ = dct
+            new_obj = cls()
+            new_obj.__dict__.update(dct)
             return new_obj
         else:
             return dct

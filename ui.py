@@ -126,7 +126,9 @@ class MainForm(npyscreen.FormBaseNew):
         resourceManager.add_character_update_handler(self.abilitiesObj.update_rows)
         resourceManager.add_chat_update_handler(self.chat_update_handler)
         resourceManager.add_connected_update_handler(self.connected_update_handler)
+        resourceManager.add_event_handler(self.queue_event)
         self.connected_update_handler(False)
+        self.add_event_hander("TESTEVENT", self.handle_show_event)
 
     def event_input_send(self):
         text = self.inputBoxObj.value
@@ -188,6 +190,14 @@ class MainForm(npyscreen.FormBaseNew):
 
         self.add_line(self.lines - 1, 5, self.footer, self.make_attributes_list(self.footer, curses.A_NORMAL), self.columns - 4)
 
+    def handle_show_event(self, event):
+        data = event.payload
+        logEntry.LogEntry(data).edit()
+        self.display()
+
+    def queue_event(self, event: npyscreen.Event):
+        self.parentApp.queue_event(event)
+
 
 class App(npyscreen.StandardApp):
     def __init__(self):
@@ -195,7 +205,7 @@ class App(npyscreen.StandardApp):
 
     def onStart(self):
         resourceManager.load_character()
-        self.registerForm("MAIN", MainForm(lines=MAX_HEIGHT, columns=MAX_WIDTH))
+        self.registerForm("MAIN", MainForm(lines=MAX_HEIGHT, columns=MAX_WIDTH, parentApp=self))
         self.getForm('MAIN').update_character()
 
 
