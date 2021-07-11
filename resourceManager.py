@@ -134,9 +134,11 @@ def load_character():
     new_char = character.DEFAULT_CHARACTER
     set_my_player(new_char)
 
-    commandHandler.parse_command('load campaign')
-    commandHandler.parse_command('load character')
-
+    try:
+        commandHandler.parse_command('load campaign')
+        commandHandler.parse_command('load character')
+    except Exception:
+        pass
 
 
 def get_player(name: str) -> character.Character:

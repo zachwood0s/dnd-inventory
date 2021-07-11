@@ -18,8 +18,12 @@ class _InputBoxInner(npyscreen.Autocomplete):
             commands.PLAYERS_EFFECT: self.auto_complete_players_effect_id,
             commands.TRAIT: self.auto_complete_trait,
             commands.DICE_FMT: self.auto_complete_dice_fmt,
+            commands.ANY_ID: self.auto_complete_any_id,
         }
         super().__init__(screen, **kwargs)
+
+    def set_up_handlers(self):
+        super().set_up_handlers()
 
     def auto_complete(self, input_):
         words = self.value.split()
@@ -126,6 +130,12 @@ class _InputBoxInner(npyscreen.Autocomplete):
             return []
         else:
             return [ability_id for ability_id in p.abilities if ability_id.startswith(part_word)]
+
+    def auto_complete_any_id(self, words, command, part_word: str):
+        res = self.auto_complete_item_id(words, command, part_word)
+        res += self.auto_complete_ability_id(words, command, part_word)
+        res += self.auto_complete_effect_id(words, command, part_word)
+        return res
 
     @staticmethod
     def auto_complete_item_id(words, command, part_word: str):

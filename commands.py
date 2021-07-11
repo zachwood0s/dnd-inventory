@@ -24,6 +24,7 @@ ABILITY_ID = '<ability_id>'
 PLAYERS_ABILITY = '<players_ability>'
 EFFECT_ID = '<effect_id>'
 PLAYERS_EFFECT = '<players_effect>'
+ANY_ID = '<any_id>'
 VALUE = '<value>'
 
 
@@ -291,7 +292,7 @@ def remedy_command(command: List[str]):
     _update_player_and_chat(command, msg, player)
 
 
-@commandHandler.register_command('show', n_args=2, help_text=f'show {PLAYER} {EFFECT_ID}')
+@commandHandler.register_command('show', n_args=2, help_text=f'show {PLAYER} {ANY_ID}')
 def remedy_command(command: List[str]):
     (_, name, id_) = command
 

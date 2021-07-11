@@ -2,6 +2,7 @@ from client import DNDClientFactory
 from twisted.internet.protocol import Factory, Protocol
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet import reactor
+from twisted.protocols import basic
 import time
 import pickle
 import uuid
@@ -9,7 +10,7 @@ import uuid
 import packet
 
 
-class DNDServer(Protocol):
+class DNDServer(basic.LineReceiver):
     def __init__(self, users):
         self.users = users
         self.id = uuid.uuid4()
@@ -31,13 +32,13 @@ class DNDServer(Protocol):
         del self.users[self.id]
         print('User disconnected: ', self.id)
 
-    def dataReceived(self, data: bytes):
-        pkt: packet.Packet = pickle.loads(data)
+    def lineReceived(self, line):
+        pkt: packet.Packet = pickle.loads(line)
         print(f"Got packet from {pkt.sender}", str(pkt.data))
 
         for id_, user in self.users.items():
             if id_ != self.id:
-                user.transport.write(data)
+                user.sendLine(line)
 
 
 class DNDServerFactory(Factory):
@@ -49,7 +50,7 @@ class DNDServerFactory(Factory):
 
 
 if __name__ == '__main__':
-    print('Starting server on port 8007')
-    endpoint = TCP4ServerEndpoint(reactor, 8007)
+    print('Starting server on port 1630')
+    endpoint = TCP4ServerEndpoint(reactor, 1630)
     endpoint.listen(DNDServerFactory())
     reactor.run()

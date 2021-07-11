@@ -1,5 +1,6 @@
 from twisted.internet.protocol import Protocol, ClientFactory, ReconnectingClientFactory
 from twisted.internet import reactor
+from twisted.protocols import basic
 from sys import stdout
 from os import system
 
@@ -15,7 +16,7 @@ import resourceManager
 import settings
 
 
-class DNDClient(Protocol):
+class DNDClient(basic.LineReceiver):
     def __init__(self):
         super().__init__()
 
@@ -32,8 +33,8 @@ class DNDClient(Protocol):
         print("lost connection")
         resourceManager.set_is_connected(False)
 
-    def dataReceived(self, data):
-        pkt: packet.Packet = pickle.loads(data)
+    def lineReceived(self, line):
+        pkt: packet.Packet = pickle.loads(line)
         resourceManager.handle_incoming(pkt)
 
     def packet_listener(self, pkt: packet.Packet):
@@ -41,7 +42,7 @@ class DNDClient(Protocol):
 
             print('sending packet', pkt.data)
             pickled = pickle.dumps(pkt)
-            self.transport.write(pickled)
+            self.sendLine(pickled)
         else:
             pass
 
