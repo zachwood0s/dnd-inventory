@@ -24,7 +24,7 @@ class DNDServer(basic.LineReceiver):
             user = next(iter(self.users.values()))
             pkt = packet.make_sync_request_packet(None, '', 'server request')
             pickled = pickle.dumps(pkt)
-            user.transport.write(pickled)
+            user.sendLine(pickled)
 
         self.users[self.id] = self
 

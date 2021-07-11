@@ -312,6 +312,14 @@ def remedy_command(command: List[str]):
         resourceManager.show_data(p)
 
 
+@commandHandler.register_command('view', n_args=1, help_text=f'show {PLAYER}')
+def remedy_command(command: List[str]):
+    (_, name) = command
+
+    if resourceManager.has_player(name):
+        resourceManager.set_viewed_player(name)
+
+
 # endregion
 
 

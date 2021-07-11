@@ -129,7 +129,7 @@ class StatGridBox(npyscreen.BoxTitle):
         self.entry_widget.columns = 4
         col_titles = ['Name', 'Passives', 'Actives', 'Qty']
         self.entry_widget.column_percents = [2, 5, 5, 1]
-        me = resourceManager.get_player(resourceManager.get_my_player_name())
+        me = resourceManager.get_player(resourceManager.get_viewed_player_name())
         rows = []
         for item in items:
             i = resourceManager.get_item(item)

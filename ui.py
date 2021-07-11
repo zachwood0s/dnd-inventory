@@ -94,20 +94,23 @@ class MainForm(npyscreen.FormBaseNew):
         self.effects = self.add(statBox.StatGridBox, name='Effects', max_width=remaining_width - 2 * item_padding,
                                 max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
 
-        self.effects.create(lambda: resourceManager.get_player(resourceManager.ME).get_effects(), 'effects')
+        self.effects.create(
+            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).get_effects(), 'effects')
         self.effects.update_rows(None)
 
         grid_args = {'column_percents': []}
         self.itemsObj = self.add(statBox.StatGridBox, name='Items', max_width=remaining_width - 2 * item_padding,
                                  max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
-        self.itemsObj.create(lambda: resourceManager.get_player(resourceManager.ME).items, 'items')
+        self.itemsObj.create(
+            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).items, 'items')
         self.itemsObj.update_rows(None)
 
         # ABILITIES
         grid_args = {'column_percents': []}
         self.abilitiesObj = self.add(statBox.StatGridBox, name='Weapons & Abilities', max_width=remaining_width - 2 * item_padding,
                                      contained_widget_arguments=grid_args)
-        self.abilitiesObj.create(lambda: resourceManager.get_player(resourceManager.ME).get_abilities(), 'abilities')
+        self.abilitiesObj.create(
+            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).get_abilities(), 'abilities')
         self.abilitiesObj.update_rows(None)
 
         # init handlers
@@ -162,14 +165,15 @@ class MainForm(npyscreen.FormBaseNew):
             obj.display()
 
     def update_character(self):
-        player = resourceManager.get_player(resourceManager.ME)
+        player = resourceManager.get_player(resourceManager.get_viewed_player_name())
 
         self.xpbarObj.value = player.get_stat(character.XP)
         self.xpbarObj.entry_widget.out_of = player.get_stat(character.MAX_XP)
         self.healthBarObj.value = player.get_stat(character.HP)
         self.healthBarObj.entry_widget.out_of = player.get_stat(character.MAX_HP)
 
-        self.nameObj.values = [player.get_stat(character.NAME)]
+        front = '(NOT YOU) ' if player.get_stat(character.NAME) != resourceManager.get_my_player_name() else ''
+        self.nameObj.values = [front + player.get_stat(character.NAME)]
 
         for stat in player.battle_stats:
             self.statObjs[stat].values = player.fmt_stat(stat).splitlines()

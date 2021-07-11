@@ -57,7 +57,7 @@ DEFAULT_CHARACTER_TRAITS = {
     MAX_HP: 10,
     XP: 0,
     MAX_XP: 10,
-    NAME: 'NoName',
+    NAME: '--NoName--',
 }
 
 

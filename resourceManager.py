@@ -30,6 +30,7 @@ class _Manager:
     def __init__(self) -> None:
         self.sync = _SyncableData()
         self.my_player_name: str = ''
+        self.viewed_player: str = ''
         self.set_handlers = []
         self.character_update_handlers: List[CharacterHandler] = []
         self.chat_update_handlers: List[ChatHandler] = []
@@ -122,6 +123,7 @@ def load_data(data, command: str):
     if type(data) is character.Character:
         data: character.Character
         set_my_player(data)
+        _manager.viewed_player = data.get_stat(character.NAME)
 
     elif type(data) is CampaignDB:
         data: CampaignDB
@@ -133,6 +135,7 @@ def load_character():
     global _manager
     new_char = character.DEFAULT_CHARACTER
     set_my_player(new_char)
+    set_viewed_player(new_char.get_stat(character.NAME))
 
     try:
         commandHandler.parse_command('load campaign')
@@ -164,6 +167,11 @@ def get_my_player_name() -> str:
     return _manager.my_player_name
 
 
+def get_viewed_player_name() -> str:
+    global _manager
+    return _manager.viewed_player
+
+
 def set_player(packet_: packet.Packet, send_msg=True) -> None:
     global _manager
 
@@ -189,8 +197,16 @@ def set_player(packet_: packet.Packet, send_msg=True) -> None:
 def set_my_player(c: character.Character) -> None:
     global _manager
     _manager.my_player_name = c.get_stat(character.NAME)
+    _manager.viewed_player = _manager.my_player_name
     pkt = packet.make_character_packet(c, ME, '')
     set_player(pkt, send_msg=False)
+
+
+def set_viewed_player(name: str) -> None:
+    global _manager
+    name = _normalize_name(name)
+    _manager.viewed_player = name
+    _manager.update_handler(_manager.character_update_handlers, None)
 
 
 def add_connected_update_handler(handler: ConnectedHandler) -> ConnectedHandler:
@@ -236,7 +252,8 @@ def add_chat_update_handler(handler: ChatHandler) -> ChatHandler:
 
 def get_players() -> List[character.Character]:
     global _manager
-    return [p for p in _manager.sync.players if p is not character.DEFAULT_CHARACTER]
+    return [p for p in _manager.sync.players
+            if p.get_stat(character.NAME) != character.DEFAULT_CHARACTER.get_stat(character.NAME)]
 
 
 def set_sync_data(packet_: packet.Packet):
