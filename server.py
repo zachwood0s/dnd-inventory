@@ -4,6 +4,7 @@ from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet import reactor
 from twisted.protocols import basic
 import time
+import lzma
 import pickle
 import uuid
 
@@ -11,6 +12,8 @@ import packet
 
 
 class DNDServer(basic.LineReceiver):
+    MAX_LENGTH = 100000
+
     def __init__(self, users):
         self.users = users
         self.id = uuid.uuid4()
@@ -22,9 +25,10 @@ class DNDServer(basic.LineReceiver):
         if len(self.users) > 0:
             # Need to sync the data to the new user
             user = next(iter(self.users.values()))
-            pkt = packet.make_sync_request_packet(None, '', 'server request')
-            pickled = pickle.dumps(pkt)
-            user.sendLine(pickled)
+            if user is not self:
+                pkt = packet.make_sync_request_packet(None, '', 'server request')
+                pickled = lzma.compress(pickle.dumps(pkt))
+                user.sendLine(pickled)
 
         self.users[self.id] = self
 
@@ -33,7 +37,7 @@ class DNDServer(basic.LineReceiver):
         print('User disconnected: ', self.id)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(line)
+        pkt: packet.Packet = pickle.loads(lzma.decompress(line))
         print(f"Got packet from {pkt.sender}", str(pkt.data))
 
         for id_, user in self.users.items():

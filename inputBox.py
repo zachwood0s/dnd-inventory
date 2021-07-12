@@ -53,7 +53,7 @@ class _InputBoxInner(npyscreen.Autocomplete):
 
         # Add space so its ready for the next word
         existing = ' '.join(words[:-1])
-        self.use_possibilities(existing, list(possibilities))
+        self.use_possibilities(existing, sorted(possibilities))
         self.value += ' '
         self.cursor_position = len(self.value)
 

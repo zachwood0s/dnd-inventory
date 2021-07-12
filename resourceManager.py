@@ -126,7 +126,7 @@ def get_effects() -> Dict[str, character.Effect]:
 def load_data(data, command: str):
     if type(data) is character.Character:
         data: character.Character
-        set_my_player(data)
+        set_my_player(data, True)
         _manager.viewed_player = data.get_stat(character.NAME)
 
     elif type(data) is CampaignDB:
@@ -198,7 +198,7 @@ def set_player(packet_: packet.Packet, send_msg=True) -> None:
         _manager.update_handler(_manager.general_msg_handlers, packet_)
 
 
-def set_my_player(c: character.Character) -> None:
+def set_my_player(c: character.Character, send_msg=False) -> None:
     global _manager
     _manager.my_player_name = c.get_stat(character.NAME)
     _manager.viewed_player = _manager.my_player_name
@@ -276,7 +276,7 @@ def set_sync_data(packet_: packet.Packet):
     old_sync = _manager.sync
     my_player = get_player(get_my_player_name())
     _manager.sync = packet_.data
-    set_my_player(my_player)
+    set_my_player(my_player, send_msg=True)
 
     _manager.update_handler(_manager.chat_update_handlers, packet_)
     _manager.update_handler(_manager.character_update_handlers, packet_)

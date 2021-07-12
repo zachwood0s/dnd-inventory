@@ -9,6 +9,7 @@ import argparse
 import time
 import threading
 import pickle
+import lzma
 
 import ui
 import packet
@@ -30,18 +31,19 @@ class DNDClient(basic.LineReceiver):
         resourceManager.set_is_connected(True)
 
     def connectionLost(self, reason):
-        print("lost connection")
+        print("lost connection. reason:", reason)
         resourceManager.set_is_connected(False)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(line)
+        pkt: packet.Packet = pickle.loads(lzma.decompress(line))
         resourceManager.handle_incoming(pkt)
 
     def packet_listener(self, pkt: packet.Packet):
         if self.connected:
 
-            print('sending packet', pkt.data)
-            pickled = pickle.dumps(pkt)
+            pickled = lzma.compress(pickle.dumps(pkt))
+            print(f'sending packet (size {len(pickled)})', pkt.data)
+
             self.sendLine(pickled)
         else:
             pass
