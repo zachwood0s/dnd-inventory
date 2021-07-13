@@ -18,6 +18,8 @@ import settings
 
 
 class DNDClient(basic.LineReceiver):
+    MAX_LENGTH = 100000
+
     def __init__(self):
         super().__init__()
 
