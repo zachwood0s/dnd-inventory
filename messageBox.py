@@ -44,7 +44,8 @@ class MessageBox(npyscreen.BoxTitle):
 
         # get user info
         users = resourceManager.get_players()
-        max_name_len = max(len(textwrap.wrap(u.get_stat(character.NAME), self.width // 5)[0]) for u in users)
+        max_name_len = max((len(textwrap.wrap(u.get_stat(character.NAME), self.width // 5)[0]) for u in users),
+                           default=0)
 
         out = []
         for msg in messages:

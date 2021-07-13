@@ -203,7 +203,7 @@ def set_my_player(c: character.Character, send_msg=False) -> None:
     _manager.my_player_name = c.get_stat(character.NAME)
     _manager.viewed_player = _manager.my_player_name
     pkt = packet.make_character_packet(c, ME, '')
-    set_player(pkt, send_msg=False)
+    set_player(pkt, send_msg=send_msg)
 
 
 def set_viewed_player(name: str) -> None:
