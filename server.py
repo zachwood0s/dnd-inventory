@@ -27,7 +27,7 @@ class DNDServer(basic.LineReceiver):
             user = next(iter(self.users.values()))
             if user is not self:
                 pkt = packet.make_sync_request_packet(None, '', 'server request')
-                pickled = lzma.compress(pickle.dumps(pkt))
+                pickled = pickle.dumps(pkt)
                 user.sendLine(pickled)
 
         self.users[self.id] = self
@@ -37,7 +37,7 @@ class DNDServer(basic.LineReceiver):
         print('User disconnected: ', self.id)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(lzma.decompress(line))
+        pkt: packet.Packet = pickle.loads(line)
         print(f"Got packet from {pkt.sender}", str(pkt.data))
 
         for id_, user in self.users.items():

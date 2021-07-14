@@ -37,13 +37,13 @@ class DNDClient(basic.LineReceiver):
         resourceManager.set_is_connected(False)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(lzma.decompress(line))
+        pkt: packet.Packet = pickle.loads(line)
         resourceManager.handle_incoming(pkt)
 
     def packet_listener(self, pkt: packet.Packet):
         if self.connected:
 
-            pickled = lzma.compress(pickle.dumps(pkt))
+            pickled = pickle.dumps(pkt)
             print(f'sending packet (size {len(pickled)})', pkt.data)
 
             self.sendLine(pickled)

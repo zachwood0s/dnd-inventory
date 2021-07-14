@@ -3,6 +3,7 @@ import random
 import re
 import hjson
 import pathlib
+import os
 
 import commandHandler
 import resourceManager
@@ -219,7 +220,10 @@ def unuse_command(command: List[str]):
     (_, item_id) = command
     player = resourceManager.get_player(resourceManager.get_my_player_name())
     if item_id in player.items:
-        player.active_items.remove(item_id)
+        try:
+            player.active_items.remove(item_id)
+        except ValueError:
+            pass
     else:
         print("no no no item not exist in player")
         return
@@ -349,6 +353,9 @@ class Encoder(hjson.HjsonEncoder):
 
 @commandHandler.register_command('save', n_args=0, help_text='save')
 def save_command(command_: List[str]):
+    p = pathlib.Path('./') / DEFAULT_DATA_DIRECTORY
+    os.mkdir(p.resolve())
+
     # Write character
     p = pathlib.Path('./' + DEFAULT_DATA_DIRECTORY) / DEFAULT_CHARACTER_PATH
     with p.open(mode='w') as f:
