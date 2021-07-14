@@ -45,3 +45,5 @@
   - An item/ability/effect could respond to a certain set of events
   - For example an item could have: remove_on = 'turn' which would remove the effect when the users turn is over
   - It could also have a counter so something like: remove_on = 'turn 2' would remove it after 2 turns
+
+- Add the ability to effect all

@@ -2,6 +2,8 @@ from collections import defaultdict
 from typing import Callable, List
 from dataclasses import dataclass
 
+import resourceManager
+import packet
 _REGISTERED_COMMANDS = defaultdict(dict)
 
 
@@ -37,12 +39,16 @@ def parse_command(input_str: str):
                     print(e)
                     raise e
             else:
-                print(f'No command "{command[0]}" that takes {arg_cnt} arg(s) found')
-                print('Options:')
+                msg = f'No command "{command[0]}" that takes {arg_cnt} arg(s) found\n'
+                msg += 'Options:\n'
                 for cmd in commands.values():
-                    print(cmd.help_text)
+                    msg += cmd.help_text + '\n'
+
+                raise ValueError(msg)
         else:
-            print(f'Command "{command[0]}" not found')
+            raise ValueError(f'Command "{command[0]}" not found')
 
     except Exception as e:
         print(e)
+        p = packet.Packet(packet.MessageType.Message, None, '', str(e))
+        resourceManager.error(p)

@@ -32,6 +32,9 @@ VALUE = '<value>'
 def parse_dice_amt(input_: str):
     res = _DICE_REGEX.match(input_)
 
+    if res is None:
+        raise ValueError(f'Dice format not recognized "{input_}"')
+
     amt = 1
     if res.group(1) != '':
         amt = int(res.group(1))
@@ -303,10 +306,8 @@ def remedy_command(command: List[str]):
     (_, name, id_) = command
 
     if name.lower() == 'all':
-        print('hi')
         recv = None
     else:
-        print('by')
         player = resourceManager.get_player(name)
         recv = player.get_stat(character.NAME)
 

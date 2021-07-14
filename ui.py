@@ -28,9 +28,8 @@ class MainForm(npyscreen.FormBaseNew):
                                       highlighting_arr_color_data=[0])
 
         # create ui
-        self.logBoxObj = self.add(messageBox.MessageBox, name='Console', relx=(x - log_width),
-                                  max_height=10, editable=False, custom_highlighting=True,
-                                  highlighting_arr_color_data=[0])
+        self.logBoxObj = self.add(npyscreen.BoxTitle, name='Console', relx=(x - log_width),
+                                  max_height=10, editable=False)
 
         self.inputBoxObj = self.add(inputBox.InputBox, footer='Input', rely=-7, relx=(x - log_width), editable=True)
         self.inputBoxObj.create()
@@ -124,11 +123,12 @@ class MainForm(npyscreen.FormBaseNew):
         resourceManager.add_character_update_handler(self.effects.update_rows)
         resourceManager.add_character_update_handler(self.itemsObj.update_rows)
         resourceManager.add_character_update_handler(self.abilitiesObj.update_rows)
-        resourceManager.add_chat_update_handler(self.chat_update_handler)
+        resourceManager.add_chat_update_handler(lambda _: self.messageBoxObj.update_messages())
+        resourceManager.add_error_update_handler(self.error_update_handler)
         resourceManager.add_connected_update_handler(self.connected_update_handler)
         resourceManager.add_event_handler(self.queue_event)
         self.connected_update_handler(False)
-        self.add_event_hander("TESTEVENT", self.handle_show_event)
+        self.add_event_hander("SHOWEVENT", self.handle_show_event)
 
     def event_input_send(self):
         text = self.inputBoxObj.value
@@ -141,6 +141,11 @@ class MainForm(npyscreen.FormBaseNew):
     def exit_func(self, _input):
         self.parentApp.switchForm(None)
 
+    def error_update_handler(self, packet_):
+        self.logBoxObj.entry_widget.values = [x for t in packet_.data.splitlines()
+                                              for x in textwrap.wrap(t, self.logBoxObj.entry_widget.width)]
+        self.logBoxObj.display()
+
     def connected_update_handler(self, connected: bool):
         if resourceManager.get_is_connected():
             self.footer = ' Connected '
@@ -148,9 +153,6 @@ class MainForm(npyscreen.FormBaseNew):
             self.footer = ' Disconnected '
 
         self.display()
-
-    def chat_update_handler(self, _packet):
-        self.messageBoxObj.update_messages()
 
     def character_update_handler(self, _packet):
         self.update_character()

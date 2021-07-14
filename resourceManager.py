@@ -36,6 +36,7 @@ class _Manager:
         self.set_handlers = []
         self.character_update_handlers: List[CharacterHandler] = []
         self.chat_update_handlers: List[ChatHandler] = []
+        self.error_update_handlers: List[ChatHandler] = []
         self.connected_handlers: List[ConnectedHandler] = []
         self.general_msg_handlers: List[MessageHandler] = []
         self.event_handlers: List[EventHandler] = []
@@ -155,7 +156,7 @@ def get_player(name: str) -> character.Character:
         if p.get_stat(character.NAME) == name:
             return p
 
-    raise ValueError(f"Character {name} does not exist")
+    raise ValueError(f"Character '{name}' does not exist")
 
 
 def has_player(name: str) -> bool:
@@ -260,6 +261,12 @@ def add_chat_update_handler(handler: ChatHandler) -> ChatHandler:
     return handler
 
 
+def add_error_update_handler(handler: ChatHandler) -> ChatHandler:
+    global _manager
+    _manager.error_update_handlers.append(handler)
+    return handler
+
+
 def get_players() -> List[character.Character]:
     global _manager
     return [p for p in _manager.sync.players
@@ -295,7 +302,11 @@ def show_data(packet_: packet.Packet):
     import logEntry
     data = packet_.data
     if has_item(data) or has_ability(data) or has_effect(data):
-        _manager.update_handler(_manager.event_handlers, npyscreen.Event('TESTEVENT', data))
+        _manager.update_handler(_manager.event_handlers, npyscreen.Event('SHOWEVENT', data))
+
+
+def error(packet_: packet.Packet):
+    _manager.update_handler(_manager.error_update_handlers, packet_)
 
 
 incoming_lock = threading.Lock()
