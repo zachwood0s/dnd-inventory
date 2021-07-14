@@ -353,8 +353,6 @@ class Encoder(hjson.HjsonEncoder):
 
 @commandHandler.register_command('save', n_args=0, help_text='save')
 def save_command(command_: List[str]):
-    p = pathlib.Path('./') / DEFAULT_DATA_DIRECTORY
-    os.mkdir(p.resolve())
 
     # Write character
     p = pathlib.Path('./' + DEFAULT_DATA_DIRECTORY) / DEFAULT_CHARACTER_PATH
