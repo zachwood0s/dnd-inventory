@@ -33,11 +33,7 @@ def parse_command(input_str: str):
         if commands is not None:
             handler = commands.get(arg_cnt)
             if handler is not None:
-                try:
-                    handler.func(command)
-                except Exception as e:
-                    print(e)
-                    raise e
+                handler.func(command)
             else:
                 msg = f'No command "{command[0]}" that takes {arg_cnt} arg(s) found\n'
                 msg += 'Options:\n'

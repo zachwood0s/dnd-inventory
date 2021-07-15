@@ -127,26 +127,32 @@ def get_effects() -> Dict[str, character.Effect]:
 def load_data(data, command: str):
     if type(data) is character.Character:
         data: character.Character
-        set_my_player(data, True)
-        _manager.viewed_player = data.get_stat(character.NAME)
+        try:
+            set_my_player(data, True)
+            _manager.viewed_player = data.get_stat(character.NAME)
+        except KeyError as e:
+            raise Exception(f'Error while loading character, key {e} does not exist')
+        except Exception as e:
+            raise Exception(f'Error while loading character: {e}')
 
     elif type(data) is CampaignDB:
         data: CampaignDB
-        set_campaign_db(data)
+        try:
+            set_campaign_db(data)
+        except Exception as e:
+            raise Exception(f'Error while loading campaign: {e}')
 
 
-def load_character():
-    import commandHandler
-    global _manager
+def default_character():
     new_char = character.DEFAULT_CHARACTER
     set_my_player(new_char)
     set_viewed_player(new_char.get_stat(character.NAME))
 
-    try:
-        commandHandler.parse_command('load campaign')
-        commandHandler.parse_command('load character')
-    except Exception:
-        pass
+
+def load_character():
+    import commandHandler
+    commandHandler.parse_command('load campaign')
+    commandHandler.parse_command('load character')
 
 
 def get_player(name: str) -> character.Character:

@@ -206,9 +206,10 @@ class App(npyscreen.StandardApp):
         super().__init__()
 
     def onStart(self):
-        resourceManager.load_character()
+        resourceManager.default_character()
         self.registerForm("MAIN", MainForm(lines=MAX_HEIGHT, columns=MAX_WIDTH, parentApp=self))
         self.getForm('MAIN').update_character()
+        resourceManager.load_character()
 
 
 if __name__ == '__main__':
