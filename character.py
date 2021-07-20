@@ -160,6 +160,8 @@ class Character:
 
     def calc_stat(self, name):
         stat = self.raw_stat(name)
+        if name == NAME:
+            return stat, 0, False
         all_effects = self.get_effects()
         filtered_traits = [t for e in all_effects for t in resourceManager.get_effect(e).traits if t.name == name]
 

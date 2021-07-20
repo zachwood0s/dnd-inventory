@@ -19,6 +19,7 @@ class _InputBoxInner(npyscreen.Autocomplete):
             commands.TRAIT: self.auto_complete_trait,
             commands.DICE_FMT: self.auto_complete_dice_fmt,
             commands.ANY_ID: self.auto_complete_any_id,
+            commands.OBJ_TYPE: self.auto_complete_obj_type,
         }
         super().__init__(screen, **kwargs)
 
@@ -154,6 +155,11 @@ class _InputBoxInner(npyscreen.Autocomplete):
         players.append('me')
         filtered = [name.replace(' ', '_') for name in players if name.startswith(part_word)]
         return filtered
+
+    @staticmethod
+    def auto_complete_obj_type(words, command, part_word: str):
+        auto_obj = ['item', 'ability', 'effect']
+        return [d for d in auto_obj if d.startswith(part_word)]
 
     def show_choices(self, possibilities):
         width = self.width + 8

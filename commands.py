@@ -27,6 +27,7 @@ EFFECT_ID = '<effect_id>'
 PLAYERS_EFFECT = '<players_effect>'
 ANY_ID = '<any_id>'
 VALUE = '<value>'
+OBJ_TYPE = '<obj_type>'
 
 
 def parse_dice_amt(input_: str):
@@ -378,4 +379,37 @@ def load_command(command: List[str]):
     with p.open(mode='r') as f:
         data = hjson.load(f, cls=ObjDecoder)
         resourceManager.load_data(data, ' '.join(command))
+
+
+@commandHandler.register_command('create', n_args=2, help_text=f'create {OBJ_TYPE} <name> <description>', var_args=True)
+def load_command(command: List[str]):
+    (_, obj_type, name, *description) = command
+
+    obj_id = name.lower()
+    obj_name = name.replace('_', ' ')
+
+    obj_class = {
+        'item': character.Item,
+        'ability': character.Ability,
+        'effect': character.Effect
+    }.get(obj_type)
+
+    if obj_class is None:
+        raise ValueError(f'Object type "{obj_type}" does not exist!')
+
+    new_obj = obj_class(name=obj_name, desc=' '.join(description))
+
+    campaign = resourceManager.get_campaign_db()
+    if obj_type == 'item':
+        campaign.items[obj_id] = new_obj
+    elif obj_type == 'ability':
+        campaign.abilities[obj_id] = new_obj
+    else:
+        campaign.effects[obj_id] = new_obj
+
+    print(new_obj)
+
+    resourceManager.set_campaign_db(campaign)
+
+
 
