@@ -381,8 +381,16 @@ def load_command(command: List[str]):
         resourceManager.load_data(data, ' '.join(command))
 
 
+@commandHandler.register_command('chat', n_args=1, help_text=f'chat <msg>', var_args=True)
+def chat_command(command: List[str]):
+    origin_command = ' '.join(command)
+    (_, *words) = command
+    pkt = make_chat_packet([' '.join(words)], resourceManager.get_my_player_name(), origin_command)
+    resourceManager.add_chat_message(pkt)
+
+
 @commandHandler.register_command('create', n_args=2, help_text=f'create {OBJ_TYPE} <name> <description>', var_args=True)
-def load_command(command: List[str]):
+def create_command(command: List[str]):
     (_, obj_type, name, *description) = command
 
     obj_id = name.lower()
@@ -406,8 +414,6 @@ def load_command(command: List[str]):
         campaign.abilities[obj_id] = new_obj
     else:
         campaign.effects[obj_id] = new_obj
-
-    print(new_obj)
 
     resourceManager.set_campaign_db(campaign)
 
