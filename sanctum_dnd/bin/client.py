@@ -1,20 +1,15 @@
-from twisted.internet.protocol import Protocol, ClientFactory, ReconnectingClientFactory
+from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.internet import reactor
 from twisted.protocols import basic
-from sys import stdout
 from os import system
 
 import argparse
 
-import time
 import threading
 import pickle
-import lzma
 
-import ui
-import packet
-import resourceManager
-import settings
+from sanctum_dnd.ui import main_form
+from sanctum_dnd import resource_manager, packet, settings
 
 
 class DNDClient(basic.LineReceiver):
@@ -26,19 +21,19 @@ class DNDClient(basic.LineReceiver):
         def worker(pkt):
             reactor.callFromThread(self.packet_listener, pkt)
 
-        resourceManager.add_message_handler(worker)
+        resource_manager.add_message_handler(worker)
 
     def connectionMade(self):
         print("connected")
-        resourceManager.set_is_connected(True)
+        resource_manager.set_is_connected(True)
 
     def connectionLost(self, reason):
         print("lost connection. reason:", reason)
-        resourceManager.set_is_connected(False)
+        resource_manager.set_is_connected(False)
 
     def lineReceived(self, line):
         pkt: packet.Packet = pickle.loads(line)
-        resourceManager.handle_incoming(pkt)
+        resource_manager.handle_incoming(pkt)
 
     def packet_listener(self, pkt: packet.Packet):
         if self.connected:
@@ -60,11 +55,11 @@ class DNDClientFactory(ReconnectingClientFactory):
 
     def buildProtocol(self, addr):
         print('Connected.')
-        resourceManager.set_is_connected(True)
+        resource_manager.set_is_connected(True)
         return DNDClient()
 
     def clientConnectionLost(self, connector, reason):
-        resourceManager.set_is_connected(False)
+        resource_manager.set_is_connected(False)
         print('Lost connection.  Reason:', reason)
         ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
 
@@ -81,12 +76,14 @@ if __name__ == '__main__':
 
     system(f'mode con: cols={settings.MAX_WIDTH} lines={settings.MAX_HEIGHT}')
 
-    app = ui.App()
+    app = main_form.App()
+
 
     def worker():
         app.run(fork=False)
         print('Exiting')
         reactor.callFromThread(reactor.stop)
+
 
     threading.Thread(target=worker).start()
 

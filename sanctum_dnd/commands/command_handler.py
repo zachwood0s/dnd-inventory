@@ -1,9 +1,9 @@
 from collections import defaultdict
-from typing import Callable, List
+from typing import Callable, List, Optional, Dict
 from dataclasses import dataclass
 
-import resourceManager
-import packet
+from sanctum_dnd import resource_manager, packet
+
 _REGISTERED_COMMANDS = defaultdict(dict)
 _VAR_ARG_COMMANDS = defaultdict(list)
 
@@ -14,6 +14,14 @@ class Command:
     help_text: str
     var_args: bool
     arg_cnt: int
+
+
+def get_command_list(name: str) -> Optional[Dict[int, Command]]:
+    return _REGISTERED_COMMANDS.get(name, None)
+
+
+def get_all_command_names() -> List[str]:
+    return list(_REGISTERED_COMMANDS.keys())
 
 
 def register_command(cmd_name: str, n_args: int, help_text: str, var_args: bool = False):
@@ -67,4 +75,4 @@ def parse_command(input_str: str):
     except Exception as e:
         print(e)
         p = packet.Packet(packet.MessageType.Message, None, '', str(e))
-        resourceManager.error(p)
+        resource_manager.error(p)

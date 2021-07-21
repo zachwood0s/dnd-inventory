@@ -2,7 +2,7 @@ from typing import Union, List, Dict
 from dataclasses import dataclass
 import dataclasses
 import itertools
-import resourceManager
+from sanctum_dnd import resource_manager
 
 NAME = 'name'
 HP = 'hp'
@@ -128,11 +128,11 @@ class Character:
         self.effects: List[str] = []
 
     def get_effects(self) -> List[str]:
-        passive_item_effects = (eff for item in self.items for eff in resourceManager.get_item(item).passives)
+        passive_item_effects = (eff for item in self.items for eff in resource_manager.get_item(item).passives)
         active_item_effects = (eff for item in self.items
-                               for eff in resourceManager.get_item(item).actives if item in self.active_items)
+                               for eff in resource_manager.get_item(item).actives if item in self.active_items)
         abilities = self.get_abilities()
-        ability_effects = (eff for ability in abilities for eff in resourceManager.get_ability(ability).passives)
+        ability_effects = (eff for ability in abilities for eff in resource_manager.get_ability(ability).passives)
         effects = iter(self.effects)
         all_effects = itertools.chain(effects, passive_item_effects, active_item_effects, ability_effects)
         return list(all_effects)
@@ -140,7 +140,7 @@ class Character:
     def get_abilities(self) -> List[str]:
         abilities = iter(self.abilities)
         item_abilities = (a for item in self.items
-                          for a in resourceManager.get_item(item).abilities if item in self.active_items)
+                          for a in resource_manager.get_item(item).abilities if item in self.active_items)
         all_abilities = itertools.chain(abilities, item_abilities)
         return list(all_abilities)
 
@@ -163,7 +163,7 @@ class Character:
         if name == NAME:
             return stat, 0, False
         all_effects = self.get_effects()
-        filtered_traits = [t for e in all_effects for t in resourceManager.get_effect(e).traits if t.name == name]
+        filtered_traits = [t for e in all_effects for t in resource_manager.get_effect(e).traits if t.name == name]
 
         if len(filtered_traits) > 0:
             base = stat
