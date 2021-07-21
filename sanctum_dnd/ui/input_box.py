@@ -3,6 +3,7 @@ import curses
 import npyscreen
 import sanctum_dnd.commands as commands
 import sanctum_dnd.commands.help_text
+import sanctum_dnd.utils as utils
 from sanctum_dnd import resource_manager, character
 
 
@@ -21,10 +22,32 @@ class _InputBoxInner(npyscreen.Autocomplete):
             commands.help_text.ANY_ID: self.auto_complete_any_id,
             commands.help_text.OBJ_TYPE: self.auto_complete_obj_type,
         }
+        self.command_history = []
+        self.command_history_idx = 0
         super().__init__(screen, **kwargs)
 
     def set_up_handlers(self):
         super().set_up_handlers()
+
+        self.handlers.update({
+            curses.KEY_UP: self.show_history,
+            curses.KEY_DOWN: self.show_history,
+        })
+
+    def show_history(self, input_):
+        print(self.command_history)
+        if not self.command_history:
+            return
+
+        if input_ == curses.KEY_UP:
+            self.command_history_idx += 1
+        else:
+            self.command_history_idx -= 1
+
+        self.command_history_idx = utils.clamp(self.command_history_idx, 0, len(self.command_history))
+        temp_list = [''] + self.command_history
+        self.value = temp_list[self.command_history_idx]
+        self.cursor_position = len(self.value)
 
     def auto_complete(self, input_):
         words = self.value.split()
@@ -182,5 +205,6 @@ class InputBox(npyscreen.BoxTitle):
         self.entry_widget.handlers.update(new_handlers)
 
     def enter_command(self, _input):
+        self.entry_widget.command_history.insert(0, self.value)
+        self.entry_widget.command_history_idx = 0
         self.parent.event_input_send()
-

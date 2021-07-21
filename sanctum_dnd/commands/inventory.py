@@ -68,16 +68,23 @@ def create_command(command: List[str]):
 
 @command_handler.register_command('give', n_args=2, help_text=f'give {PLAYER} {ITEM_ID}')
 def give_command(command: List[str]):
-    (_, name, item_id) = command
+    new_command = command + ['1']
+    give_n_command(new_command)
+
+
+@command_handler.register_command('give', n_args=3, help_text=f'give {PLAYER} {ITEM_ID} <AMOUNT>')
+def give_n_command(command: List[str]):
+    (_, name, item_id, amount) = command
+    amount = int(amount)
     player = resource_manager.get_player(name)
     if resource_manager.has_item(item_id):
         if item_id in player.item_qtys:
             # The player already has one, increase the qty
-            player.item_qtys[item_id] += 1
+            player.item_qtys[item_id] += amount
         else:
             # Need to add the item to the player
             player.items.append(item_id)
-            player.item_qtys[item_id] = 1
+            player.item_qtys[item_id] = amount
     else:
         print("no no no item not exist")
         return
@@ -88,12 +95,19 @@ def give_command(command: List[str]):
 
 @command_handler.register_command('take', n_args=2, help_text=f'take {PLAYER} {PLAYERS_ITEM}')
 def take_command(command: List[str]):
-    (_, name, item_id) = command
+    new_command = command + ['1']
+    take_n_command(new_command)
+
+
+@command_handler.register_command('take', n_args=3, help_text=f'take {PLAYER} {PLAYERS_ITEM} <AMOUNT>')
+def take_n_command(command: List[str]):
+    (_, name, item_id, amount) = command
+    amount = int(amount)
     player = resource_manager.get_player(name)
     if item_id in player.items:
-        if player.item_qtys[item_id] > 1:
+        if player.item_qtys[item_id] > amount:
             # If the player has more than one then simply decrease the amount
-            player.item_qtys[item_id] -= 1
+            player.item_qtys[item_id] -= amount
         else:
             # Otherwise we need to completely remove the item
             player.items.remove(item_id)
