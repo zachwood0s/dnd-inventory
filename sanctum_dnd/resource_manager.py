@@ -1,9 +1,9 @@
-from typing import List, Callable, Dict
-from functools import partial
-import npyscreen
-import packet
-import character
 import threading
+from functools import partial
+from typing import List, Callable, Dict
+
+import npyscreen
+from sanctum_dnd import packet, character
 
 ME = 'me'
 
@@ -150,9 +150,9 @@ def default_character():
 
 
 def load_character():
-    import commandHandler
-    commandHandler.parse_command('load campaign')
-    commandHandler.parse_command('load character')
+    import sanctum_dnd.commands as commands
+    commands.parse_command('load campaign')
+    commands.parse_command('load character')
 
 
 def get_player(name: str) -> character.Character:
@@ -305,7 +305,6 @@ def send_general_packet(packet_: packet.Packet):
 
 
 def show_data(packet_: packet.Packet):
-    import logEntry
     data = packet_.data
     if has_item(data) or has_ability(data) or has_effect(data):
         _manager.update_handler(_manager.event_handlers, npyscreen.Event('SHOWEVENT', data))

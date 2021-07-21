@@ -1,9 +1,9 @@
-import npyscreen
 import curses
 import math
 import typing
-import character
-import resourceManager
+
+import npyscreen
+from sanctum_dnd import resource_manager, character
 
 
 class StatSlider(npyscreen.BoxTitle):
@@ -72,11 +72,11 @@ class StatGrid(npyscreen.GridColTitles):
         })
 
     def enter_command(self, event_):
-        import logEntry
+        from sanctum_dnd.ui import log_entry
         idx = self.edit_cell[0]
         if idx < len(self.parent_widget.ids):
             id = self.parent_widget.ids[idx]
-            logEntry.LogEntry(id).edit()
+            log_entry.LogEntry(id).edit()
 
 
 class StatGridBox(npyscreen.BoxTitle):
@@ -118,7 +118,7 @@ class StatGridBox(npyscreen.BoxTitle):
         self.entry_widget.columns = 2
         self.entry_widget.column_percents = [2, 11]
         col_titles = ['Name', 'Modifiers']
-        rows = [[eff.name, _str_effect_traits(eff.traits)] for eff in map(resourceManager.get_effect, effects)]
+        rows = [[eff.name, _str_effect_traits(eff.traits)] for eff in map(resource_manager.get_effect, effects)]
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles
         self.rows = rows
@@ -129,10 +129,10 @@ class StatGridBox(npyscreen.BoxTitle):
         self.entry_widget.columns = 4
         col_titles = ['Name', 'Passives', 'Actives', 'Qty']
         self.entry_widget.column_percents = [2, 5, 5, 1]
-        me = resourceManager.get_player(resourceManager.get_viewed_player_name())
+        me = resource_manager.get_player(resource_manager.get_viewed_player_name())
         rows = []
         for item in items:
-            i = resourceManager.get_item(item)
+            i = resource_manager.get_item(item)
             front = '(Using) ' if item in me.active_items else ''
             rows.append([front + i.name, _str_item_traits(i.passives),
                          _str_item_traits(character.active_selector(i)()), me.item_qtys[item]])
@@ -151,7 +151,7 @@ class StatGridBox(npyscreen.BoxTitle):
         rows = [[eff.name, eff.stats[character.RANGE], eff.stats[character.TO_HIT],
                  eff.stats[character.DICE], eff.stats[character.DAMAGE_TYPE], _str_ability_traits(eff.passives),
                  _str_ability_traits(eff.actives)]
-                for eff in map(resourceManager.get_ability, abilities)]
+                for eff in map(resource_manager.get_ability, abilities)]
 
         self.entry_widget.values = rows
         self.entry_widget.col_titles = col_titles
@@ -160,11 +160,11 @@ class StatGridBox(npyscreen.BoxTitle):
 
 
 def _str_ability_traits(effects: typing.List[str]):
-    return ''.join(_str_effect_traits(resourceManager.get_effect(e).traits) for e in effects)
+    return ''.join(_str_effect_traits(resource_manager.get_effect(e).traits) for e in effects)
 
 
 def _str_item_traits(effects: typing.List[str]):
-    return ''.join(_str_effect_traits(resourceManager.get_effect(e).traits) for e in effects)
+    return ''.join(_str_effect_traits(resource_manager.get_effect(e).traits) for e in effects)
 
 
 def _str_effect_traits(traits: typing.List[character.EffectTrait]):

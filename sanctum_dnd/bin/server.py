@@ -1,14 +1,12 @@
-from client import DNDClientFactory
-from twisted.internet.protocol import Factory, Protocol
-from twisted.internet.endpoints import TCP4ServerEndpoint
-from twisted.internet import reactor
-from twisted.protocols import basic
-import time
-import lzma
 import pickle
 import uuid
 
-import packet
+from twisted.internet import reactor
+from twisted.internet.endpoints import TCP4ServerEndpoint
+from twisted.internet.protocol import Factory, Protocol
+from twisted.protocols import basic
+
+from sanctum_dnd import packet
 
 
 class DNDServer(basic.LineReceiver):

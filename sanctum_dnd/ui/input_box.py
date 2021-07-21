@@ -1,25 +1,25 @@
 import curses
+
 import npyscreen
-import commands
-import commandHandler
-import resourceManager
-import character
+import sanctum_dnd.commands as commands
+import sanctum_dnd.commands.help_text
+from sanctum_dnd import resource_manager, character
 
 
 class _InputBoxInner(npyscreen.Autocomplete):
     def __init__(self, screen, **kwargs):
         self.command_handlers = {
-            commands.PLAYER: self.auto_complete_player,
-            commands.ITEM_ID: self.auto_complete_item_id,
-            commands.ABILITY_ID: self.auto_complete_ability_id,
-            commands.EFFECT_ID: self.auto_complete_effect_id,
-            commands.PLAYERS_ITEM: self.auto_complete_players_item_id,
-            commands.PLAYERS_ABILITY: self.auto_complete_players_ability_id,
-            commands.PLAYERS_EFFECT: self.auto_complete_players_effect_id,
-            commands.TRAIT: self.auto_complete_trait,
-            commands.DICE_FMT: self.auto_complete_dice_fmt,
-            commands.ANY_ID: self.auto_complete_any_id,
-            commands.OBJ_TYPE: self.auto_complete_obj_type,
+            commands.help_text.PLAYER: self.auto_complete_player,
+            commands.help_text.ITEM_ID: self.auto_complete_item_id,
+            commands.help_text.ABILITY_ID: self.auto_complete_ability_id,
+            commands.help_text.EFFECT_ID: self.auto_complete_effect_id,
+            commands.help_text.PLAYERS_ITEM: self.auto_complete_players_item_id,
+            commands.help_text.PLAYERS_ABILITY: self.auto_complete_players_ability_id,
+            commands.help_text.PLAYERS_EFFECT: self.auto_complete_players_effect_id,
+            commands.help_text.TRAIT: self.auto_complete_trait,
+            commands.help_text.DICE_FMT: self.auto_complete_dice_fmt,
+            commands.help_text.ANY_ID: self.auto_complete_any_id,
+            commands.help_text.OBJ_TYPE: self.auto_complete_obj_type,
         }
         super().__init__(screen, **kwargs)
 
@@ -41,7 +41,7 @@ class _InputBoxInner(npyscreen.Autocomplete):
             possibilities = self.auto_complete_commands(words, None, words[-1])
         else:
             # find command then find each piece
-            command_list = commandHandler._REGISTERED_COMMANDS.get(words[0], None)
+            command_list = commands.get_command_list(words[0])
             if command_list is not None:
                 for arg_amt, command in command_list.items():
                     if count <= arg_amt + 1:
@@ -76,16 +76,16 @@ class _InputBoxInner(npyscreen.Autocomplete):
             self.value = new_value
 
     @staticmethod
-    def find_player(words, command: commandHandler.Command):
+    def find_player(words, command: commands.command_handler.Command):
         try:
-            idx = command.help_text.split().index(commands.PLAYER)
+            idx = command.help_text.split().index(commands.help_text.PLAYER)
         except ValueError:
             # player not in the command
-            return resourceManager.get_player(resourceManager.ME)
+            return resource_manager.get_player(resource_manager.ME)
 
         player_id = words[idx]
         try:
-            return resourceManager.get_player(player_id)
+            return resource_manager.get_player(player_id)
         except ValueError:
             return None
 
@@ -105,7 +105,7 @@ class _InputBoxInner(npyscreen.Autocomplete):
     @staticmethod
     def auto_complete_commands(words, command, part_word: str):
         # autocomplete the command name
-        return [x for x in commandHandler._REGISTERED_COMMANDS.keys() if x.startswith(part_word)]
+        return [x for x in commands.get_all_command_names() if x.startswith(part_word)]
 
     @staticmethod
     def auto_complete_players_item_id(words, command, part_word: str):
@@ -139,19 +139,20 @@ class _InputBoxInner(npyscreen.Autocomplete):
 
     @staticmethod
     def auto_complete_item_id(words, command, part_word: str):
-        return [item_id for item_id in resourceManager.get_items().keys() if item_id.startswith(part_word)]
+        return [item_id for item_id in resource_manager.get_items().keys() if item_id.startswith(part_word)]
 
     @staticmethod
     def auto_complete_ability_id(words, command, part_word: str):
-        return [ability_id for ability_id in resourceManager.get_abilities().keys() if ability_id.startswith(part_word)]
+        return [ability_id for ability_id in resource_manager.get_abilities().keys() if
+                ability_id.startswith(part_word)]
 
     @staticmethod
     def auto_complete_effect_id(words, command, part_word: str):
-        return [effect_id for effect_id in resourceManager.get_effects().keys() if effect_id.startswith(part_word)]
+        return [effect_id for effect_id in resource_manager.get_effects().keys() if effect_id.startswith(part_word)]
 
     @staticmethod
     def auto_complete_player(words, command, part_word: str):
-        players = [p.get_stat(character.NAME) for p in resourceManager.get_players()]
+        players = [p.get_stat(character.NAME) for p in resource_manager.get_players()]
         players.append('me')
         filtered = [name.replace(' ', '_') for name in players if name.startswith(part_word)]
         return filtered

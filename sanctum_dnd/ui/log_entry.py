@@ -1,10 +1,9 @@
-import npyscreen
-import settings
-import character
-import resourceManager
-import statBox
 import textwrap
-from utils import columns
+
+import npyscreen
+from sanctum_dnd import resource_manager, character, settings
+from sanctum_dnd.ui import stat_box
+from sanctum_dnd.utils import columns
 
 
 class TraitGrid(npyscreen.BoxTitle):
@@ -25,12 +24,12 @@ class LogEntry(npyscreen.Popup):
     def create(self):
         self.name = "Log Entry"
 
-        if resourceManager.has_item(self.log_item):
-            self.create_item(resourceManager.get_item(self.log_item))
-        elif resourceManager.has_effect(self.log_item):
-            self.create_effect(resourceManager.get_effect(self.log_item))
-        elif resourceManager.has_ability(self.log_item):
-            self.create_ability(resourceManager.get_ability(self.log_item))
+        if resource_manager.has_item(self.log_item):
+            self.create_item(resource_manager.get_item(self.log_item))
+        elif resource_manager.has_effect(self.log_item):
+            self.create_effect(resource_manager.get_effect(self.log_item))
+        elif resource_manager.has_ability(self.log_item):
+            self.create_ability(resource_manager.get_ability(self.log_item))
 
     def create_item(self, item: character.Item):
         y, x = self.useable_space()
@@ -41,13 +40,13 @@ class LogEntry(npyscreen.Popup):
                                  max_height=self.DESC_HEIGHT)
 
         grid_args = {'column_percents': []}
-        self.actives_obj = self.add(statBox.StatGridBox, name='Actives', max_height=10,
+        self.actives_obj = self.add(stat_box.StatGridBox, name='Actives', max_height=10,
                                     contained_widget_arguments=grid_args)
         self.actives_obj.create(character.active_selector(item), 'effects')
         self.actives_obj.update_rows(None)
         self.actives_obj.resize()
 
-        self.passives_obj = self.add(statBox.StatGridBox, name='Passives', max_height=10,
+        self.passives_obj = self.add(stat_box.StatGridBox, name='Passives', max_height=10,
                                      contained_widget_arguments=grid_args)
         self.passives_obj.create(lambda: item.passives, 'effects')
         self.passives_obj.update_rows(None)
@@ -88,18 +87,18 @@ class LogEntry(npyscreen.Popup):
         stat_height = 4
         for idx, (stat, val) in enumerate(ability.stats.items()):
             word = ' '.join(map(str.capitalize, stat.split('_')))
-            self.statObjs[stat] = self.add(statBox.StatBox, name=word, values=[str(val)], color='VERYGOOD',
+            self.statObjs[stat] = self.add(stat_box.StatBox, name=word, values=[str(val)], color='VERYGOOD',
                                            editable=False,
                                            max_width=stat_width, max_height=stat_height, relx=stat_xs[idx], rely=stat_y)
 
         grid_args = {'column_percents': []}
-        self.actives_obj = self.add(statBox.StatGridBox, name='Actives', max_height=10,
+        self.actives_obj = self.add(stat_box.StatGridBox, name='Actives', max_height=10,
                                     contained_widget_arguments=grid_args)
         self.actives_obj.create(lambda: ability.actives, 'effects')
         self.actives_obj.update_rows(None)
         self.actives_obj.resize()
 
-        self.passives_obj = self.add(statBox.StatGridBox, name='Passives', max_height=10,
+        self.passives_obj = self.add(stat_box.StatGridBox, name='Passives', max_height=10,
                                      contained_widget_arguments=grid_args)
         self.passives_obj.create(lambda: ability.passives, 'effects')
         self.passives_obj.update_rows(None)

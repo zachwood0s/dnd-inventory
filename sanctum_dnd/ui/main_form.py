@@ -1,16 +1,12 @@
-from utils import columns
-import textwrap
-import npyscreen
 import curses
-import messageBox
-import inputBox
-import statBox
-import character
-import commandHandler
-import resourceManager
-import logEntry
-from settings import MAX_HEIGHT, MAX_WIDTH
-import commands
+import textwrap
+
+import npyscreen
+import sanctum_dnd.commands as commands
+from sanctum_dnd import resource_manager, character
+from sanctum_dnd.settings import MAX_HEIGHT, MAX_WIDTH
+from sanctum_dnd.ui import message_box, stat_box, log_entry, input_box
+from sanctum_dnd.utils import columns
 
 
 class MainForm(npyscreen.FormBaseNew):
@@ -23,7 +19,7 @@ class MainForm(npyscreen.FormBaseNew):
         log_width = (x // 4)
 
         # create ui
-        self.messageBoxObj = self.add(messageBox.MessageBox, name='Log', rely=2, relx=(x - log_width),
+        self.messageBoxObj = self.add(message_box.MessageBox, name='Log', rely=2, relx=(x - log_width),
                                       max_height=-15, editable=False, custom_highlighting=True,
                                       highlighting_arr_color_data=[0])
 
@@ -31,7 +27,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.logBoxObj = self.add(npyscreen.BoxTitle, name='Console', relx=(x - log_width),
                                   max_height=10, editable=False)
 
-        self.inputBoxObj = self.add(inputBox.InputBox, footer='Input', rely=-7, relx=(x - log_width), editable=True)
+        self.inputBoxObj = self.add(input_box.InputBox, footer='Input', rely=-7, relx=(x - log_width), editable=True)
         self.inputBoxObj.create()
 
         remaining_width = x - log_width
@@ -42,13 +38,13 @@ class MainForm(npyscreen.FormBaseNew):
         bar_height = 3
         bar_args = {'out_of': 100, 'value': 40, 'color': 'DANGER'}
 
-        self.healthBarObj = self.add(statBox.StatSlider, name='HP', color='DANGER', max_width=bar_width,
+        self.healthBarObj = self.add(stat_box.StatSlider, name='HP', color='DANGER', max_width=bar_width,
                                      max_height=bar_height,
                                      relx=bar_xs[0], rely=2, editable=False,
                                      contained_widget_arguments=bar_args)
 
         bar_args = {'out_of': 100, 'value': 40, 'color': 'GOOD'}
-        self.xpbarObj = self.add(statBox.StatSlider, name='XP', color='GOOD', max_width=bar_width,
+        self.xpbarObj = self.add(stat_box.StatSlider, name='XP', color='GOOD', max_width=bar_width,
                                  max_height=bar_height,
                                  relx=bar_xs[1], rely=2, editable=False,
                                  contained_widget_arguments=bar_args)
@@ -61,15 +57,16 @@ class MainForm(npyscreen.FormBaseNew):
         stat_height = 4
         stat_y = 6
 
-        self.nameObj = self.add(statBox.StatBox, name='NAME', values=[''], color='WARNING', editable=False,
-                                max_width=stat_width*2 + stat_padding, max_height=stat_height,
+        self.nameObj = self.add(stat_box.StatBox, name='NAME', values=[''], color='WARNING', editable=False,
+                                max_width=stat_width * 2 + stat_padding, max_height=stat_height,
                                 relx=stat_xs[0], rely=stat_y)
 
         self.statObjs = {}
         for idx, (stat, val) in enumerate(character.DEFAULT_BATTLE_STATS.items()):
-            self.statObjs[stat] = self.add(statBox.StatBox, name=stat.upper(), values=[str(val)], color='VERYGOOD',
+            self.statObjs[stat] = self.add(stat_box.StatBox, name=stat.upper(), values=[str(val)], color='VERYGOOD',
                                            editable=False,
-                                           max_width=stat_width, max_height=stat_height, relx=stat_xs[idx+2], rely=stat_y)
+                                           max_width=stat_width, max_height=stat_height, relx=stat_xs[idx + 2],
+                                           rely=stat_y)
 
         # PERSON STATS
         person_padding = 4
@@ -79,7 +76,8 @@ class MainForm(npyscreen.FormBaseNew):
 
         self.personObjs = {}
         for idx, (person, val) in enumerate(character.DEFAULT_PERSON_STATS.items()):
-            self.personObjs[person] = self.add(statBox.StatBox, name=person.upper(), values=[str(val)], color='VERYGOOD',
+            self.personObjs[person] = self.add(stat_box.StatBox, name=person.upper(), values=[str(val)],
+                                               color='VERYGOOD',
                                                editable=False,
                                                max_width=person_width, max_height=person_height, relx=person_xs[idx],
                                                rely=person_y)
@@ -90,26 +88,27 @@ class MainForm(npyscreen.FormBaseNew):
 
         # ABILITIES
         grid_args = {'column_percents': []}
-        self.effects = self.add(statBox.StatGridBox, name='Effects', max_width=remaining_width - 2 * item_padding,
+        self.effects = self.add(stat_box.StatGridBox, name='Effects', max_width=remaining_width - 2 * item_padding,
                                 max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
 
         self.effects.create(
-            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).get_effects(), 'effects')
+            lambda: resource_manager.get_player(resource_manager.get_viewed_player_name()).get_effects(), 'effects')
         self.effects.update_rows(None)
 
         grid_args = {'column_percents': []}
-        self.itemsObj = self.add(statBox.StatGridBox, name='Items', max_width=remaining_width - 2 * item_padding,
+        self.itemsObj = self.add(stat_box.StatGridBox, name='Items', max_width=remaining_width - 2 * item_padding,
                                  max_height=(remaining_height // 3), contained_widget_arguments=grid_args)
         self.itemsObj.create(
-            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).items, 'items')
+            lambda: resource_manager.get_player(resource_manager.get_viewed_player_name()).items, 'items')
         self.itemsObj.update_rows(None)
 
         # ABILITIES
         grid_args = {'column_percents': []}
-        self.abilitiesObj = self.add(statBox.StatGridBox, name='Weapons & Abilities', max_width=remaining_width - 2 * item_padding,
+        self.abilitiesObj = self.add(stat_box.StatGridBox, name='Weapons & Abilities',
+                                     max_width=remaining_width - 2 * item_padding,
                                      contained_widget_arguments=grid_args)
         self.abilitiesObj.create(
-            lambda: resourceManager.get_player(resourceManager.get_viewed_player_name()).get_abilities(), 'abilities')
+            lambda: resource_manager.get_player(resource_manager.get_viewed_player_name()).get_abilities(), 'abilities')
         self.abilitiesObj.update_rows(None)
 
         # init handlers
@@ -119,21 +118,21 @@ class MainForm(npyscreen.FormBaseNew):
         }
 
         self.add_handlers(new_handlers)
-        resourceManager.add_character_update_handler(self.character_update_handler)
-        resourceManager.add_character_update_handler(self.effects.update_rows)
-        resourceManager.add_character_update_handler(self.itemsObj.update_rows)
-        resourceManager.add_character_update_handler(self.abilitiesObj.update_rows)
-        resourceManager.add_chat_update_handler(lambda _: self.messageBoxObj.update_messages())
-        resourceManager.add_error_update_handler(self.error_update_handler)
-        resourceManager.add_connected_update_handler(self.connected_update_handler)
-        resourceManager.add_event_handler(self.queue_event)
+        resource_manager.add_character_update_handler(self.character_update_handler)
+        resource_manager.add_character_update_handler(self.effects.update_rows)
+        resource_manager.add_character_update_handler(self.itemsObj.update_rows)
+        resource_manager.add_character_update_handler(self.abilitiesObj.update_rows)
+        resource_manager.add_chat_update_handler(lambda _: self.messageBoxObj.update_messages())
+        resource_manager.add_error_update_handler(self.error_update_handler)
+        resource_manager.add_connected_update_handler(self.connected_update_handler)
+        resource_manager.add_event_handler(self.queue_event)
         self.connected_update_handler(False)
         self.add_event_hander("SHOWEVENT", self.handle_show_event)
 
     def event_input_send(self):
         text = self.inputBoxObj.value
         self.inputBoxObj.value = ''
-        commandHandler.parse_command(text)
+        commands.parse_command(text)
 
     def afterEditing(self):
         self.parentApp.setNextForm(None)
@@ -147,7 +146,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.logBoxObj.display()
 
     def connected_update_handler(self, connected: bool):
-        if resourceManager.get_is_connected():
+        if resource_manager.get_is_connected():
             self.footer = ' Connected '
         else:
             self.footer = ' Disconnected '
@@ -169,14 +168,14 @@ class MainForm(npyscreen.FormBaseNew):
             obj.display()
 
     def update_character(self):
-        player = resourceManager.get_player(resourceManager.get_viewed_player_name())
+        player = resource_manager.get_player(resource_manager.get_viewed_player_name())
 
         self.xpbarObj.value = player.get_stat(character.XP)
         self.xpbarObj.entry_widget.out_of = player.get_stat(character.MAX_XP)
         self.healthBarObj.value = player.get_stat(character.HP)
         self.healthBarObj.entry_widget.out_of = player.get_stat(character.MAX_HP)
 
-        front = '(NOT YOU) ' if player.get_stat(character.NAME) != resourceManager.get_my_player_name() else ''
+        front = '(NOT YOU) ' if player.get_stat(character.NAME) != resource_manager.get_my_player_name() else ''
         self.nameObj.values = [front + player.get_stat(character.NAME)]
 
         for stat in player.battle_stats:
@@ -194,7 +193,7 @@ class MainForm(npyscreen.FormBaseNew):
 
     def handle_show_event(self, event):
         data = event.payload
-        logEntry.LogEntry(data).edit()
+        log_entry.LogEntry(data).edit()
         self.display()
 
     def queue_event(self, event: npyscreen.Event):
@@ -206,8 +205,8 @@ class App(npyscreen.StandardApp):
         super().__init__()
 
     def onStart(self):
-        resourceManager.default_character()
-        resourceManager.load_character()
+        resource_manager.default_character()
+        resource_manager.load_character()
         self.registerForm("MAIN", MainForm(lines=MAX_HEIGHT, columns=MAX_WIDTH, parentApp=self))
         self.getForm('MAIN').update_character()
 

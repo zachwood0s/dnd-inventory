@@ -1,7 +1,7 @@
-import npyscreen
 import textwrap
-import resourceManager
-import character
+
+import npyscreen
+from sanctum_dnd import resource_manager, character
 
 MY_COLOR = 'VERYGOOD'
 OTHER_COLOR = 'WARNING'
@@ -40,10 +40,10 @@ class MessageBox(npyscreen.BoxTitle):
         self.display()
 
     def get_messages_info(self):
-        messages = resourceManager.get_chat_messages()
+        messages = resource_manager.get_chat_messages()
 
         # get user info
-        users = resourceManager.get_players()
+        users = resource_manager.get_players()
         max_name_len = max((len(textwrap.wrap(u.get_stat(character.NAME), self.width // 5)[0]) for u in users),
                            default=0)
 
@@ -57,7 +57,7 @@ class MessageBox(npyscreen.BoxTitle):
 
             offset = " " * (max_name_len - (len(user_name)))
             name = user_name + ":" + offset
-            color_name = MY_COLOR if msg.sender == resourceManager.get_my_player_name() else OTHER_COLOR
+            color_name = MY_COLOR if msg.sender == resource_manager.get_my_player_name() else OTHER_COLOR
             color_val = self.parent.theme_manager.findPair(self, color_name)
             color = (len(user_name)) * [color_val]
             mess = "\n".join(msg.data)
