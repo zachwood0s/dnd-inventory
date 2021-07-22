@@ -2,7 +2,7 @@ import textwrap
 
 import npyscreen
 from sanctum_dnd import resource_manager, character, settings
-from sanctum_dnd.ui import stat_box
+from sanctum_dnd.ui.cli import stat_box
 from sanctum_dnd.utils import columns
 
 

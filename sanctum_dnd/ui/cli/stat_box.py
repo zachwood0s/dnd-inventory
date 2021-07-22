@@ -72,7 +72,7 @@ class StatGrid(npyscreen.GridColTitles):
         })
 
     def enter_command(self, event_):
-        from sanctum_dnd.ui import log_entry
+        from sanctum_dnd.ui.cli import log_entry
         idx = self.edit_cell[0]
         if idx < len(self.parent_widget.ids):
             id = self.parent_widget.ids[idx]

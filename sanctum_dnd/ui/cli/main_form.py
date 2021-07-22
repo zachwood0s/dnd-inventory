@@ -5,7 +5,7 @@ import npyscreen
 import sanctum_dnd.commands as commands
 from sanctum_dnd import resource_manager, character
 from sanctum_dnd.settings import MAX_HEIGHT, MAX_WIDTH
-from sanctum_dnd.ui import message_box, stat_box, log_entry, input_box
+from sanctum_dnd.ui.cli import message_box, input_box, log_entry, stat_box
 from sanctum_dnd.utils import columns
 
 

@@ -1,15 +1,14 @@
-from twisted.internet.protocol import ReconnectingClientFactory
-from twisted.internet import reactor
-from twisted.protocols import basic
+import argparse
+import pickle
+import threading
 from os import system
 
-import argparse
+from twisted.internet import reactor
+from twisted.internet.protocol import ReconnectingClientFactory
+from twisted.protocols import basic
 
-import threading
-import pickle
-
-from sanctum_dnd.ui import main_form
 from sanctum_dnd import resource_manager, packet, settings
+from sanctum_dnd.ui.cli import main_form
 
 
 class DNDClient(basic.LineReceiver):
