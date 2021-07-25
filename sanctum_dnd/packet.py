@@ -1,24 +1,23 @@
-import enum
 import typing
 from dataclasses import dataclass
 
 
-class MessageType(enum.Enum):
+class MessageType:
     Action = 1  # data: str representing command
     Message = 2  # data: each line of message in a list
     UpdateCharacter = 3  # data: updated character
-    SyncDataResponse = 4         # data: all syncable data
-    SyncDataRequest = 5          # data: none
-    ShowRequest = 6              # data: str of id to show
+    SyncDataResponse = 4  # data: all syncable data
+    SyncDataRequest = 5  # data: none
+    ShowRequest = 6  # data: str of id to show
 
 
 @dataclass(frozen=True)
 class Packet:
-    type: MessageType
-    receiver: typing.Optional[str]
-    sender: str
-    data: typing.Any
-    origin_command: str = None
+    type: int = 0
+    receiver: typing.Optional[str] = ''
+    sender: str = ''
+    data: typing.Any = ''
+    origin_command: str = ''
 
 
 def make_character_packet(player, me: str, origin_command: str) -> Packet:

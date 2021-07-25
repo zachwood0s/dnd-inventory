@@ -1,14 +1,16 @@
 import argparse
-import pickle
+import lzma
 import threading
 from os import system
 
+import hjson
 from twisted.internet import reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 from twisted.protocols import basic
 
 from sanctum_dnd import resource_manager, packet, settings
 from sanctum_dnd.ui.cli import main_form
+from sanctum_dnd.utils import Encoder, ObjDecoder
 
 
 class DNDClient(basic.LineReceiver):
@@ -31,16 +33,18 @@ class DNDClient(basic.LineReceiver):
         resource_manager.set_is_connected(False)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(line)
+        line = lzma.decompress(line)
+        pkt: packet.Packet = hjson.loads(line.decode('utf-8'), cls=ObjDecoder)
         resource_manager.handle_incoming(pkt)
 
     def packet_listener(self, pkt: packet.Packet):
         if self.connected:
 
-            pickled = pickle.dumps(pkt)
-            print(f'sending packet (size {len(pickled)})', pkt.data)
+            serial: bytes = hjson.dumps(pkt, cls=Encoder).encode('utf-8')
+            serial = lzma.compress(serial)
+            print(f'sending packet (size {len(serial)})', pkt.data)
 
-            self.sendLine(pickled)
+            self.sendLine(serial)
         else:
             pass
 

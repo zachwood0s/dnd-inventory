@@ -1,5 +1,7 @@
 import importlib
 
+import hjson
+
 
 def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
@@ -38,3 +40,25 @@ def import_string(dotted_path):
         msg = 'Module "%s" does not define a "%s" attribute/class' % (
             module_path, class_name)
         raise ValueError(msg)
+
+
+class ObjDecoder(hjson.HjsonDecoder):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('object_pairs_hook', None)
+        hjson.HjsonDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, dct):
+        if '__type__' in dct:
+            cls = import_string(dct['__type__'])
+            new_obj = cls()
+            new_obj.__dict__.update(dct)
+            return new_obj
+        else:
+            return dct
+
+
+class Encoder(hjson.HjsonEncoder):
+    def default(self, obj):
+        data = obj.__dict__
+        data['__type__'] = fullname(obj)
+        return data

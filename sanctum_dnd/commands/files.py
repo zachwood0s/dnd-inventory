@@ -1,34 +1,12 @@
-import hjson
 import pathlib
-
-from sanctum_dnd import resource_manager, utils
-import sanctum_dnd.commands.command_handler as command_handler
-
 from typing import List
 
+import hjson
+
+import sanctum_dnd.commands.command_handler as command_handler
+from sanctum_dnd import resource_manager
 from sanctum_dnd.settings import DEFAULT_CAMPAIGN_DB_PATH, DEFAULT_CHARACTER_PATH, DEFAULT_DATA_DIRECTORY
-
-
-class ObjDecoder(hjson.HjsonDecoder):
-    def __init__(self, *args, **kwargs):
-        del kwargs['object_pairs_hook']
-        hjson.HjsonDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
-
-    def object_hook(self, dct):
-        if '__type__' in dct:
-            cls = utils.import_string(dct['__type__'])
-            new_obj = cls()
-            new_obj.__dict__.update(dct)
-            return new_obj
-        else:
-            return dct
-
-
-class Encoder(hjson.HjsonEncoder):
-    def default(self, obj):
-        data = obj.__dict__
-        data['__type__'] = utils.fullname(obj)
-        return data
+from sanctum_dnd.utils import ObjDecoder, Encoder
 
 
 @command_handler.register_command('save', n_args=0, help_text='save')

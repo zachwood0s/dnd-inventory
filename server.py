@@ -1,12 +1,14 @@
-import pickle
+import lzma
 import uuid
 
+import hjson
 from twisted.internet import reactor
 from twisted.internet.endpoints import TCP4ServerEndpoint
 from twisted.internet.protocol import Factory, Protocol
 from twisted.protocols import basic
 
 from sanctum_dnd import packet
+from sanctum_dnd.utils import ObjDecoder, Encoder
 
 
 class DNDServer(basic.LineReceiver):
@@ -25,7 +27,8 @@ class DNDServer(basic.LineReceiver):
             user = next(iter(self.users.values()))
             if user is not self:
                 pkt = packet.make_sync_request_packet(None, '', 'server request')
-                pickled = pickle.dumps(pkt)
+                pickled = hjson.dumps(pkt, cls=Encoder).encode('utf-8')
+                pickled = lzma.compress(pickled)
                 user.sendLine(pickled)
 
         self.users[self.id] = self
@@ -35,7 +38,8 @@ class DNDServer(basic.LineReceiver):
         print('User disconnected: ', self.id)
 
     def lineReceived(self, line):
-        pkt: packet.Packet = pickle.loads(line)
+        decomp = lzma.decompress(line)
+        pkt = hjson.loads(decomp.decode('utf-8'), cls=ObjDecoder)
         print(f"Got packet from {pkt.sender}", str(pkt.data))
 
         for id_, user in self.users.items():
