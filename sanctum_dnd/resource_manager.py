@@ -3,7 +3,8 @@ from functools import partial
 from typing import List, Callable, Dict
 
 import npyscreen
-from sanctum_dnd import packet, character
+import sanctum_dnd.character as character
+from sanctum_dnd import packet
 
 ME = 'me'
 
@@ -88,11 +89,11 @@ def has_ability(ability_id: str) -> bool:
     return ability_id in _manager.sync.campaign_db.abilities
 
 
-def get_ability(ability_id: str) -> character.Ability:
+def get_ability(ability_id: str):
     return _manager.sync.campaign_db.abilities[ability_id]
 
 
-def get_abilities() -> Dict[str, character.Ability]:
+def get_abilities():
     return _manager.sync.campaign_db.abilities
 
 
@@ -100,11 +101,11 @@ def has_item(item_id: str) -> bool:
     return item_id in _manager.sync.campaign_db.items
 
 
-def get_item(item_id: str) -> character.Item:
+def get_item(item_id: str):
     return _manager.sync.campaign_db.items[item_id]
 
 
-def get_items() -> Dict[str, character.Item]:
+def get_items():
     return _manager.sync.campaign_db.items
 
 
@@ -114,13 +115,13 @@ def has_effect(effect_id: str) -> bool:
     return effect_id in _manager.sync.campaign_db.effects
 
 
-def get_effect(effect_id: str) -> character.Effect:
+def get_effect(effect_id: str):
     if effect_id == character.hidden_effect_id:
         return character.hidden_effect
     return _manager.sync.campaign_db.effects[effect_id]
 
 
-def get_effects() -> Dict[str, character.Effect]:
+def get_effects():
     return _manager.sync.campaign_db.effects
 
 
@@ -155,7 +156,7 @@ def load_character():
     commands.parse_command('load character')
 
 
-def get_player(name: str) -> character.Character:
+def get_player(name: str):
     global _manager
     name = _normalize_name(name)
     for p in _manager.sync.players:
@@ -190,7 +191,7 @@ def set_player(packet_: packet.Packet, send_msg=True) -> None:
         f'Wrong packet type for set_player. Got {packet_.type}'
     assert type(packet_.data) is character.Character, f'Wrong type of data for set_player. Got {type(packet_.data)}'
 
-    new_character: character.Character = packet_.data
+    new_character = packet_.data
     name = _normalize_name(new_character.get_stat(character.NAME))
     if not has_player(name):
         _manager.sync.players.append(new_character)
@@ -205,7 +206,7 @@ def set_player(packet_: packet.Packet, send_msg=True) -> None:
         _manager.update_handler(_manager.general_msg_handlers, packet_)
 
 
-def set_my_player(c: character.Character, send_msg=False) -> None:
+def set_my_player(c, send_msg=False) -> None:
     global _manager
     _manager.my_player_name = c.get_stat(character.NAME)
     _manager.viewed_player = _manager.my_player_name
@@ -273,7 +274,7 @@ def add_error_update_handler(handler: ChatHandler) -> ChatHandler:
     return handler
 
 
-def get_players() -> List[character.Character]:
+def get_players():
     global _manager
     return [p for p in _manager.sync.players
             if p.get_stat(character.NAME) != character.DEFAULT_CHARACTER.get_stat(character.NAME)]
